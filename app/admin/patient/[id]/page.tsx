@@ -26,7 +26,7 @@ export default async function PatientPage({
   return (
     <div className="min-h-screen bg-slate-100 p-8">
 
-      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow p-8">
+      <div className="max-w-5xl mx-auto bg-slate-950 border border-slate-800-950 rounded-2xl shadow p-8">
 
         <h1 className="text-4xl font-bold mb-8">
           Patient Details
@@ -85,7 +85,7 @@ export default async function PatientPage({
         <div className="mt-8">
           <strong>Description:</strong>
 
-          <div className="bg-slate-50 p-4 rounded-xl mt-2">
+          <div className="bg-slate-900 p-4 rounded-xl mt-2">
             {patient.description}
           </div>
         </div>

@@ -1,87 +1,120 @@
 export default function PatientJourney() {
   const steps = [
     {
-      icon: "📄",
+      step: "01",
       title: "Submit Medical Reports",
       description:
-        "Share your reports and medical history for a free preliminary assessment.",
+        "Share your reports, scans and medical history for a confidential review.",
     },
     {
-      icon: "👨‍⚕️",
-      title: "Expert Medical Review",
+      step: "02",
+      title: "Medical Evaluation",
       description:
-        "Our team reviews your case and identifies the best treatment options.",
+        "Our healthcare team reviews your case and identifies suitable treatment options.",
     },
     {
-      icon: "🏥",
-      title: "Hospital Matching",
+      step: "03",
+      title: "Hospital Selection",
       description:
         "Receive recommendations from India's leading hospitals and specialists.",
     },
     {
-      icon: "✈️",
-      title: "Travel Assistance",
+      step: "04",
+      title: "Travel & Visa Support",
       description:
-        "Visa support, airport pickup, accommodation and complete travel guidance.",
+        "Assistance with medical visa documentation, travel planning and accommodation.",
     },
     {
-      icon: "❤️",
-      title: "Treatment & Recovery",
+      step: "05",
+      title: "Treatment In India",
       description:
-        "Dedicated support throughout treatment and post-treatment recovery.",
+        "Dedicated coordination throughout treatment, hospitalization and recovery.",
+    },
+    {
+      step: "06",
+      title: "Follow-Up Care",
+      description:
+        "Continued support and communication after you return home.",
     },
   ];
 
   return (
     <section
       id="journey"
-      className="py-24 bg-white"
+      className="py-24 bg-black text-white"
     >
       <div className="max-w-7xl mx-auto px-6">
 
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
 
-          <span className="text-blue-600 font-semibold uppercase tracking-wider">
+          <span className="text-blue-400 uppercase tracking-[4px] font-semibold">
             Patient Journey
           </span>
 
-          <h2 className="text-5xl font-bold text-slate-900 mt-4">
-            Your Treatment Journey Simplified
+          <h2 className="text-5xl lg:text-6xl font-bold mt-4">
+            Your Treatment Journey
           </h2>
 
-          <p className="text-slate-600 text-lg max-w-3xl mx-auto mt-6">
-            We manage every stage of your healthcare journey
-            so you can focus on recovery.
+          <p className="text-slate-400 text-lg max-w-3xl mx-auto mt-6">
+            A seamless end-to-end experience designed for
+            international patients seeking treatment in India.
           </p>
 
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="relative">
 
-          {steps.map((step, index) => (
-            <div
-              key={step.title}
-              className="bg-slate-50 p-8 rounded-3xl border border-slate-100 hover:shadow-xl transition-all"
-            >
+          {/* Center Timeline */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500 to-cyan-500 hidden lg:block" />
 
-              <div className="text-5xl mb-6">
-                {step.icon}
+          <div className="space-y-10">
+
+            {steps.map((step, index) => (
+
+              <div
+                key={step.step}
+                className={`flex ${
+                  index % 2 === 0
+                    ? "lg:justify-start"
+                    : "lg:justify-end"
+                }`}
+              >
+
+                <div className="w-full lg:w-[45%]">
+
+                  <div className="
+                    bg-slate-950
+                    border border-slate-800
+                    rounded-3xl
+                    p-8
+                    hover:border-blue-500
+                    transition-all
+                    duration-300
+                    hover:-translate-y-1
+                    hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]
+                  ">
+
+                    <div className="text-blue-400 text-5xl font-bold mb-5">
+                      {step.step}
+                    </div>
+
+                    <h3 className="text-2xl font-bold mb-4">
+                      {step.title}
+                    </h3>
+
+                    <p className="text-slate-400 leading-relaxed">
+                      {step.description}
+                    </p>
+
+                  </div>
+
+                </div>
+
               </div>
 
-              <div className="text-blue-600 font-bold mb-3">
-                Step {index + 1}
-              </div>
+            ))}
 
-              <h3 className="text-xl font-bold text-slate-900 mb-4">
-                {step.title}
-              </h3>
-
-              <p className="text-slate-600">
-                {step.description}
-              </p>
-
-            </div>
-          ))}
+          </div>
 
         </div>
 
