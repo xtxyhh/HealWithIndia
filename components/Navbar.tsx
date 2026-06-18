@@ -2,208 +2,1035 @@
 
 import Image from "next/image";
 import Link from "next/link";
+
 import { useState } from "react";
-import { Menu, X, Phone, MessageCircle } from "lucide-react";
+
+import { usePathname } from "next/navigation";
+
+import {
+
+Menu,
+
+X,
+
+Phone,
+
+MessageCircle,
+
+ChevronRight,
+
+Search,
+
+HeartPulse,
+
+Activity,
+
+Bone,
+
+Baby,
+
+ShieldPlus,
+
+Building2,
+
+MapPin,
+
+BadgeCheck,
+
+} from "lucide-react";
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Treatments", href: "/treatments" },
-    { name: "Hospitals", href: "/hospitals" },
-    { name: "Why India", href: "/why-india" },
-    { name: "About", href: "/about" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Contact", href: "/contact" },
-  ];
+const pathname=usePathname();
 
-  return (
-    <>
-      {/* Top Bar */}
+const [menuOpen,setMenuOpen]=useState(false);
 
-      <div className="bg-blue-600 text-white text-center text-xs font-medium py-2">
-        Trusted Medical Tourism Partner • 24/7 Patient Support • Free Medical Review
-      </div>
+const [treatmentsOpen,setTreatmentsOpen]=useState(false);
 
-      {/* Navbar */}
+const [hospitalsOpen,setHospitalsOpen]=useState(false);
 
-      <nav className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-2xl border-b border-slate-800">
 
-        <div className="max-w-7xl mx-auto px-4 lg:px-6">
 
-          <div className="h-24 flex items-center justify-between">
+const navLinks=[
 
-            {/* Logo */}
+{
 
-            <Link
-              href="/"
-              className="flex items-center gap-3 shrink-0"
-            >
+name:"Home",
 
-              <Image
-                src="/images/logo.png"
-                alt="HealWithIndia"
-                width={48}
-                height={48}
-                priority
-                className="rounded-xl"
-              />
+href:"/",
 
-              <div>
+},
 
-                <h1 className="text-2xl font-bold text-white leading-none">
-                  HealWithIndia
-                </h1>
+{
 
-                <p className="text-xs text-slate-400 mt-1">
-                  International Patient Care
-                </p>
+name:"Why India",
 
-              </div>
+href:"/why-india",
 
-            </Link>
+},
 
-            {/* Desktop Links */}
+{
 
-            <div className="hidden lg:flex items-center gap-8">
+name:"About",
 
-              {navLinks.map((link) => (
+href:"/about",
 
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-[15px] font-medium text-slate-300 hover:text-white transition"
-                >
-                  {link.name}
-                </Link>
+},
 
-              ))}
+{
 
-            </div>
+name:"FAQ",
 
-            {/* Desktop CTA */}
+href:"/faq",
 
-            <div className="hidden lg:flex items-center gap-3">
+},
 
-              <a
-                href="tel:+919116734675"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-700 text-white hover:border-blue-500 hover:bg-slate-900 transition"
-              >
+{
 
-                <Phone size={17} />
+name:"Contact",
 
-                Call
+href:"/contact",
 
-              </a>
+},
 
-              <a
-                href="https://wa.me/919116734675"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition"
-              >
+];
 
-                <MessageCircle size={17} />
 
-                WhatsApp
 
-              </a>
+const treatments=[
 
-              <a
-                href="/#consultation"
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition shadow-lg shadow-blue-600/20"
-              >
+{
 
-                Free Consultation
+name:"Cardiology",
 
-              </a>
+href:"/treatments/cardiology",
 
-            </div>
+icon:HeartPulse,
 
-            {/* Mobile Button */}
+},
 
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden text-white"
-            >
+{
 
-              {menuOpen ? (
+name:"Oncology",
 
-                <X size={30} />
+href:"/treatments/oncology",
 
-              ) : (
+icon:Activity,
 
-                <Menu size={30} />
+},
 
-              )}
+{
 
-            </button>
+name:"Orthopedics",
 
-          </div>
+href:"/treatments/orthopedics",
 
-        </div>
+icon:Bone,
 
-        {/* Mobile Menu */}
+},
 
-        <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ${
-            menuOpen
-              ? "max-h-[500px] border-t border-slate-800"
-              : "max-h-0"
-          }`}
-        >
+{
 
-          <div className="px-6 py-6 bg-slate-950">
+name:"IVF Treatment",
 
-            <div className="flex flex-col gap-5">
+href:"/treatments/ivf",
 
-              {navLinks.map((link) => (
+icon:Baby,
 
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="text-slate-300 hover:text-white transition"
-                >
+},
 
-                  {link.name}
+{
 
-                </Link>
+name:"Kidney Transplant",
 
-              ))}
+href:"/treatments/kidney-transplant",
 
-            </div>
+icon:ShieldPlus,
 
-            <div className="flex flex-col gap-3 mt-8">
+},
 
-              <a
-                href="/#consultation"
-                className="bg-blue-600 hover:bg-blue-700 text-center text-white py-3 rounded-xl font-semibold transition"
-              >
+];
 
-                Free Consultation
 
-              </a>
 
-              <a
-                href="https://wa.me/919116734675"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-green-600 hover:bg-green-700 text-center text-white py-3 rounded-xl font-semibold transition"
-              >
+const hospitals=[
 
-                WhatsApp
+{
 
-              </a>
+name:"Apollo Hospitals",
 
-            </div>
+href:"/hospitals/apollo",
 
-          </div>
+},
 
-        </div>
+{
 
-      </nav>
-    </>
-  );
+name:"Fortis Healthcare",
+
+href:"/hospitals/fortis",
+
+},
+
+{
+
+name:"Medanta",
+
+href:"/hospitals/medanta",
+
+},
+
+{
+
+name:"Max Healthcare",
+
+href:"/hospitals/max",
+
+},
+
+{
+
+name:"Manipal Hospitals",
+
+href:"/hospitals/manipal",
+
+},
+
+{
+
+name:"Narayana Health",
+
+href:"/hospitals/narayana",
+
+},
+
+];
+
+
+
+return(
+
+<>
+
+{/* TOP BAR */}
+
+<div className="relative overflow-hidden">
+
+<div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500"/>
+
+<div className="relative max-w-7xl mx-auto px-5">
+
+<div className="h-10 flex items-center justify-center text-white text-sm font-medium">
+
+JCI Accredited Hospitals
+
+<span className="mx-4 opacity-50">
+
+•
+
+</span>
+
+Serving Patients From 100+ Countries
+
+<span className="mx-4 opacity-50">
+
+•
+
+</span>
+
+24/7 International Patient Support
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<nav
+
+className="
+
+sticky
+
+top-0
+
+z-50
+
+backdrop-blur-[40px]
+
+bg-slate-950/75
+
+border-b
+
+border-white/[0.05]
+
+shadow-[0_10px_60px_rgba(0,0,0,.45)]
+
+"
+
+>
+
+<div className="max-w-[1500px] mx-auto px-5">
+
+<div className="h-[95px] flex items-center justify-between">
+
+
+
+<div className="flex items-center gap-20">
+
+
+
+
+<Link
+
+href="/"
+
+className="
+
+group
+
+flex
+
+items-center
+
+gap-5
+
+hover:scale-[1.02]
+
+transition
+
+duration-500
+
+"
+
+>
+
+<div className="relative">
+
+<div
+
+className="
+
+absolute
+
+inset-0
+
+bg-blue-500/20
+
+blur-2xl
+
+rounded-full
+
+"
+
+/>
+
+
+
+<Image
+
+src="/images/logo.png"
+
+alt="HealWithIndia"
+
+width={62}
+
+height={62}
+
+priority
+
+className="
+
+relative
+
+rounded-2xl
+
+border
+
+border-white/[0.08]
+
+shadow-[0_0_40px_rgba(37,99,235,.25)]
+
+"
+
+/>
+
+</div>
+
+
+
+
+<div>
+
+<h1
+
+className="
+
+text-[34px]
+
+font-bold
+
+tracking-tight
+
+bg-gradient-to-r
+
+from-white
+
+to-blue-200
+
+bg-clip-text
+
+text-transparent
+
+"
+
+>
+
+HealWithIndia
+
+</h1>
+
+<p
+
+className="
+
+text-sm
+
+text-slate-400
+
+mt-1
+
+tracking-wide
+
+"
+
+>
+
+International Patient Care
+
+</p>
+
+</div>
+
+</Link>
+
+<div className="hidden lg:flex items-center gap-10">
+
+
+<div
+
+className="relative"
+
+onMouseEnter={()=>setTreatmentsOpen(true)}
+
+onMouseLeave={()=>setTreatmentsOpen(false)}
+
+>
+
+<button
+
+className="
+
+text-slate-300
+
+hover:text-white
+
+font-medium
+
+transition
+
+"
+
+>
+
+Treatments
+
+</button>
+
+
+
+{
+
+treatmentsOpen &&
+
+(
+
+<div
+
+className="
+
+absolute
+
+top-10
+
+left-0
+
+w-[350px]
+
+bg-slate-950
+
+border
+
+border-slate-800
+
+rounded-3xl
+
+p-6
+
+shadow-2xl
+
+"
+
+>
+
+<div className="space-y-3">
+
+{
+
+treatments.map((item)=>{
+
+const Icon=item.icon;
+
+return(
+
+<Link
+
+key={item.name}
+
+href={item.href}
+
+className="
+
+flex
+
+items-center
+
+gap-4
+
+p-4
+
+rounded-2xl
+
+hover:bg-slate-900
+
+transition
+
+"
+
+>
+
+<Icon
+
+size={22}
+
+className="text-blue-400"
+
+/>
+
+<div>
+
+<h3 className="text-white font-semibold">
+
+{item.name}
+
+</h3>
+
+<p className="text-sm text-slate-500">
+
+Advanced Treatment
+
+</p>
+
+</div>
+
+</Link>
+
+)
+
+})
+
+}
+
+</div>
+
+</div>
+
+)
+
+}
+
+</div>
+
+<div
+
+className="relative"
+
+onMouseEnter={()=>setHospitalsOpen(true)}
+
+onMouseLeave={()=>setHospitalsOpen(false)}
+
+>
+
+<button
+
+className="
+
+text-slate-300
+
+hover:text-white
+
+font-medium
+
+transition
+
+"
+
+>
+
+Hospitals
+
+</button>
+
+
+
+{
+
+hospitalsOpen
+
+&&
+
+(
+
+<div
+
+className="
+
+absolute
+
+top-10
+
+left-0
+
+w-[320px]
+
+bg-slate-950
+
+border
+
+border-slate-800
+
+rounded-3xl
+
+p-5
+
+shadow-2xl
+
+"
+
+>
+
+{
+
+hospitals.map((hospital)=>(
+
+<Link
+
+key={hospital.name}
+
+href={hospital.href}
+
+className="
+
+flex
+
+items-center
+
+gap-3
+
+p-4
+
+rounded-2xl
+
+hover:bg-slate-900
+
+transition
+
+"
+
+>
+
+<Building2
+
+size={20}
+
+className="text-blue-400"
+
+/>
+
+{hospital.name}
+
+</Link>
+
+))
+
+}
+
+</div>
+
+)
+
+}
+
+</div>
+
+
+{
+
+navLinks.map((link)=>(
+
+<Link
+
+key={link.name}
+
+href={link.href}
+
+className={`
+
+relative
+
+font-medium
+
+transition-all
+
+duration-300
+
+${
+
+pathname===link.href
+
+?
+
+"text-white"
+
+:
+
+"text-slate-300 hover:text-white"
+
+}
+
+`}
+
+>
+
+{link.name}
+
+
+{
+
+pathname===link.href
+
+&&
+
+<div
+
+className="
+
+absolute
+
+left-0
+
+-bottom-2
+
+w-full
+
+h-[2px]
+
+bg-blue-500
+
+rounded-full
+
+"
+
+/>
+
+}
+
+</Link>
+
+))
+
+}
+
+</div>
+
+</div>
+
+<div className="hidden lg:flex items-center gap-4">
+
+
+<div className="relative">
+
+<Search
+
+size={18}
+
+className="
+
+absolute
+
+left-4
+
+top-4
+
+text-slate-500
+
+"
+
+/>
+
+
+<input
+
+placeholder="Search Hospitals"
+
+className="
+
+w-[220px]
+
+bg-slate-900
+
+border
+
+border-slate-800
+
+rounded-2xl
+
+pl-11
+
+pr-4
+
+py-3
+
+text-white
+
+outline-none
+
+focus:border-blue-500
+
+transition
+
+"
+
+/>
+
+</div>
+
+
+
+<a
+
+href="tel:+919116734675"
+
+className="
+
+flex
+
+items-center
+
+gap-3
+
+px-6
+
+py-3
+
+rounded-2xl
+
+border
+
+border-white/[0.08]
+
+text-white
+
+hover:border-blue-500
+
+hover:bg-slate-900
+
+transition
+
+"
+
+>
+
+<Phone size={18}/>
+
+Call
+
+</a>
+
+
+
+<a
+
+href="https://wa.me/919116734675"
+
+target="_blank"
+
+className="
+
+flex
+
+items-center
+
+gap-3
+
+px-6
+
+py-3
+
+rounded-2xl
+
+bg-gradient-to-r
+
+from-green-600
+
+to-green-500
+
+text-white
+
+font-semibold
+
+hover:scale-[1.03]
+
+transition
+
+shadow-[0_0_35px_rgba(22,163,74,.25)]
+
+"
+
+>
+
+<MessageCircle size={18}/>
+
+WhatsApp
+
+</a>
+
+<a
+
+href="/#consultation"
+
+className="
+
+group
+
+relative
+
+overflow-hidden
+
+px-7
+
+py-3
+
+rounded-2xl
+
+bg-gradient-to-r
+
+from-blue-600
+
+to-cyan-500
+
+text-white
+
+font-semibold
+
+hover:scale-[1.03]
+
+transition-all
+
+duration-500
+
+shadow-[0_0_50px_rgba(37,99,235,.35)]
+
+"
+
+>
+
+<div
+
+className="
+
+absolute
+
+inset-0
+
+bg-white/10
+
+translate-x-[-100%]
+
+skew-x-12
+
+group-hover:translate-x-[100%]
+
+transition-all
+
+duration-700
+
+"
+
+/>
+
+<span className="relative flex items-center gap-2">
+
+Start Free Consultation
+
+<ChevronRight
+
+size={18}
+
+className="group-hover:translate-x-1 transition"
+
+/>
+
+</span>
+
+</a>
+
+</div>
+
+
+<button
+
+className="lg:hidden text-white"
+
+onClick={()=>setMenuOpen(!menuOpen)}
+
+>
+
+{
+
+menuOpen
+
+?
+
+<X size={30}/>
+
+:
+
+<Menu size={30}/>
+
+}
+
+</button>
+
+</div>
+
+</div>
+
+</nav>
+
+</>
+
+)
+
 }
