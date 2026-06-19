@@ -268,13 +268,13 @@ return (
 
 <main className="min-h-screen bg-black text-white">
 
-<section className="relative overflow-hidden py-32 bg-gradient-to-br from-black via-slate-950 to-blue-950">
+<section className="relative overflow-hidden py-20 lg:py-32 bg-gradient-to-br from-black via-slate-950 to-blue-950">
 
 <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 blur-[160px] rounded-full"/>
 
 <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 blur-[160px] rounded-full"/>
 
-<div className="relative max-w-7xl mx-auto px-4 text-center">
+<div className="relative max-w-7xl mx-auto px-5 lg:px-4 text-center">
 
 <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400">
 
@@ -284,7 +284,7 @@ Medical Treatments
 
 </div>
 
-<h1 className="text-6xl lg:text-8xl font-bold mt-10 leading-tight">
+<h1 className="text-4xl sm:text-5xl lg:text-8xl font-bold mt-8 leading-tight">
 
 Advanced Medical
 
@@ -308,7 +308,7 @@ Without Compromising Quality
 
 </h2>
 
-<p className="max-w-4xl mx-auto mt-10 text-xl text-slate-300 leading-relaxed">
+<p className="max-w-4xl mx-auto mt-6 lg:mt-10 text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed">
 
 Access internationally accredited hospitals,
 
@@ -318,9 +318,9 @@ world-class healthcare across India.
 
 </p>
 
-<div className="flex justify-center gap-5 flex-wrap mt-14">
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10 lg:mt-14">
 
-<div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-7 py-5">
+<div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-4 py-4 lg:px-7 lg:py-5">
 
 <div className="flex items-center gap-3">
 
@@ -336,7 +336,7 @@ JCI Accredited Hospitals
 
 </div>
 
-<div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-7 py-5">
+<div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-4 py-4 lg:px-7 lg:py-5">
 
 <div className="flex items-center gap-3">
 
@@ -352,7 +352,7 @@ International Patients
 
 </div>
 
-<div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-7 py-5">
+<div className="bg-slate-950/70 border border-slate-800 rounded-2xl px-4 py-4 lg:px-7 lg:py-5">
 
 <div className="flex items-center gap-3">
 
@@ -376,9 +376,9 @@ Minimal Waiting Time
 
 {/* TREATMENTS */}
 
-<section className="py-28">
+<section className="py-20 lg:py-28">
 
-<div className="max-w-7xl mx-auto px-4">
+<div className="max-w-7xl mx-auto px-5 lg:px-4">
 
 <div className="text-center mb-20">
 
@@ -388,13 +388,13 @@ Our Expertise
 
 </p>
 
-<h2 className="text-5xl font-bold mt-5">
+<h2 className="text-4xl lg:text-5xl font-bold mt-5">
 
 Specialized Medical Treatments
 
 </h2>
 
-<p className="text-slate-400 max-w-3xl mx-auto mt-6 text-lg">
+<p className="text-slate-400 max-w-3xl mx-auto mt-6 text-sm lg:text-lg">
 
 Explore advanced medical treatments delivered by internationally
 
@@ -406,7 +406,7 @@ accredited hospitals and experienced specialists across India.
 
 
 
-<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 
 {
 
@@ -422,7 +422,7 @@ href={treatment.link}
 
 key={treatment.name}
 
-className="group relative overflow-hidden rounded-[36px]
+className="group relative overflow-hidden rounded-[24px] lg:rounded-[36px]
 
 border border-slate-800
 
@@ -478,7 +478,7 @@ Featured Treatment
 
 
 
-<div className="relative h-56 overflow-hidden">
+<div className="relative h-48 sm:h-56 overflow-hidden">
 
 <Image
 
@@ -496,243 +496,357 @@ className="w-full h-full object-cover group-hover:scale-105 transition duration-
 
 </div>
 
+<div className="p-6 lg:p-8 relative z-10">
 
+  <div className="flex items-center gap-4">
 
-<div className="p-8 relative z-10">
+    <div
+      className="
+      w-12 h-12
 
-<div className="flex items-center gap-4">
+      lg:w-14 lg:h-14
 
-<div
+      rounded-2xl
 
-className="w-14 h-14
+      bg-blue-500/10
 
-rounded-2xl
+      flex items-center justify-center
+      "
+    >
 
-bg-blue-500/10
+      <Icon
 
-flex items-center justify-center"
+        size={26}
 
->
+        className="text-blue-400"
 
-<Icon
+      />
 
-size={28}
+    </div>
 
-className="text-blue-400"
+    <h2 className="text-2xl lg:text-3xl font-bold">
 
-/>
+      {treatment.name}
 
-</div>
+    </h2>
 
-<h2 className="text-3xl font-bold">
+  </div>
 
-{treatment.name}
 
-</h2>
 
-</div>
+  <p
 
+    className="
 
+    text-slate-400
 
-<p className="text-slate-400 mt-7 leading-relaxed min-h-[80px]">
+    mt-6
 
-{treatment.description}
+    leading-relaxed
 
-</p>
+    text-[15px]
 
+    lg:text-base
 
+    min-h-[72px]
 
-<div className="flex gap-3 mt-7 flex-wrap">
+    "
 
-<div
+  >
 
-className="bg-slate-900
+    {treatment.description}
 
-border border-slate-800
+  </p>
 
-px-4 py-2
 
-rounded-full"
 
->
 
-Rating {treatment.rating}
 
-</div>
+  <div className="flex gap-3 mt-6 flex-wrap">
 
+    <div
 
+      className="
 
-<div
+      bg-slate-900
 
-className="bg-slate-900
+      border border-slate-800
 
-border border-slate-800
+      px-4 py-2
 
-px-4 py-2
+      rounded-full
 
-rounded-full"
+      text-sm
 
->
+      "
 
-{treatment.hospitals} Hospitals
+    >
 
-</div>
+      Rating {treatment.rating}
 
-</div>
+    </div>
 
 
 
-<div className="grid grid-cols-2 gap-4 mt-8">
+    <div
 
-<div
+      className="
 
-className="bg-slate-900
+      bg-slate-900
 
-border border-slate-800
+      border border-slate-800
 
-rounded-2xl
+      px-4 py-2
 
-p-5"
+      rounded-full
 
->
+      text-sm
 
-<p className="text-slate-500 text-sm">
+      "
 
-Success Rate
+    >
 
-</p>
+      {treatment.hospitals} Hospitals
 
-<h3 className="text-3xl font-bold text-green-400 mt-3">
+    </div>
 
-{treatment.success}
+  </div>
 
-</h3>
 
-</div>
 
 
 
-<div
+  <div
 
-className="bg-slate-900
+    className="
 
-border border-slate-800
+    grid
 
-rounded-2xl
+    grid-cols-1
 
-p-5"
+    sm:grid-cols-2
 
->
+    gap-4
 
-<p className="text-slate-500 text-sm">
+    mt-8
 
-Typical Cost
+    "
 
-</p>
+  >
 
-<h3 className="text-xl font-bold text-blue-400 mt-3">
 
-{treatment.cost}
 
-</h3>
+    <div
 
-</div>
+      className="
 
-</div>
+      bg-slate-900
 
+      border border-slate-800
 
+      rounded-2xl
 
-<div className="mt-7">
+      p-5
 
-<div
+      "
 
-className="inline-flex
+    >
 
-bg-green-500/15
+      <p className="text-slate-500 text-sm">
 
-border border-green-500/20
+        Success Rate
 
-text-green-400
+      </p>
 
-px-5 py-3
 
-rounded-full
 
-font-semibold"
+      <h3
 
->
+        className="
 
-{treatment.savings}
+        text-3xl
 
-</div>
+        font-bold
 
-</div>
+        text-green-400
 
+        mt-3
 
+        "
 
-<div className="space-y-4 mt-9">
+      >
 
-{
+        {treatment.success}
 
-treatment.features.map((feature)=>(
+      </h3>
 
-<div
+    </div>
 
-key={feature}
 
-className="flex gap-3 text-slate-300"
 
->
 
-<div className="text-blue-400">
 
-•
+    <div
 
-</div>
+      className="
 
-<div>
+      bg-slate-900
 
-{feature}
+      border border-slate-800
 
-</div>
+      rounded-2xl
 
-</div>
+      p-5
 
-))
+      "
 
-}
+    >
 
-</div>
+      <p className="text-slate-500 text-sm">
 
+        Typical Cost
 
+      </p>
 
-<div
 
-className="mt-10
 
-inline-flex
+      <h3
 
-items-center
+        className="
 
-gap-3
+        text-xl
 
-text-blue-400
+        lg:text-2xl
 
-font-semibold"
+        font-bold
 
->
+        text-blue-400
 
-Learn More
+        mt-3
 
-<ArrowRight
+        "
 
-size={18}
+      >
 
-className="group-hover:translate-x-1 transition"
+        {treatment.cost}
 
-/>
+      </h3>
 
-</div>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div className="mt-7">
+
+    <div
+
+      className="
+
+      inline-flex
+
+      bg-green-500/15
+
+      border border-green-500/20
+
+      text-green-400
+
+      px-5 py-3
+
+      rounded-full
+
+      font-semibold
+
+      "
+
+    >
+
+      {treatment.savings}
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <div className="space-y-4 mt-8">
+
+    {
+
+      treatment.features.map((feature)=>(
+
+        <div
+
+          key={feature}
+
+          className="flex gap-3 text-slate-300"
+
+        >
+
+          <div className="text-blue-400">
+
+            •
+
+          </div>
+
+
+
+          <div>
+
+            {feature}
+
+          </div>
+
+
+
+        </div>
+
+      ))
+
+    }
+
+  </div>
+
+
+
+
+
+  <div
+
+    className="
+
+    mt-10
+
+    inline-flex
+
+    items-center
+
+    gap-3
+
+    text-blue-400
+
+    font-semibold
+
+    "
+
+  >
+
+    Learn More
+
+    <ArrowRight
+
+      size={18}
+
+      className="group-hover:translate-x-1 transition"
+
+    />
+
+  </div>
 
 </div>
 
@@ -750,27 +864,87 @@ className="group-hover:translate-x-1 transition"
 
 </section>
 
+
+
+
+
 {/* COST COMPARISON */}
 
-<section className="py-28 border-t border-slate-900">
 
-<div className="max-w-7xl mx-auto px-4">
 
-<div className="text-center mb-20">
+<section className="py-20 lg:py-28 border-t border-slate-900">
 
-<p className="uppercase tracking-[4px] text-blue-400 text-sm font-semibold">
+<div className="max-w-7xl mx-auto px-5 lg:px-4">
+
+
+
+<div className="text-center mb-14 lg:mb-20">
+
+<p
+
+className="
+
+uppercase
+
+tracking-[4px]
+
+text-blue-400
+
+text-sm
+
+font-semibold
+
+"
+
+>
 
 Affordable Healthcare
 
 </p>
 
-<h2 className="text-5xl font-bold mt-5">
+
+
+<h2
+
+className="
+
+text-4xl
+
+lg:text-5xl
+
+font-bold
+
+mt-5
+
+"
+
+>
 
 Save Up To 90% On Treatment Costs
 
 </h2>
 
-<p className="text-slate-400 mt-6 max-w-3xl mx-auto">
+
+
+<p
+
+className="
+
+text-slate-400
+
+mt-6
+
+max-w-3xl
+
+mx-auto
+
+text-base
+
+lg:text-lg
+
+"
+
+>
 
 Receive world-class treatment at internationally accredited hospitals
 
@@ -782,33 +956,53 @@ while spending significantly less compared to western countries.
 
 
 
-<div className="overflow-x-auto rounded-[32px] border border-slate-800">
 
-<table className="w-full">
+
+<div
+
+className="
+
+overflow-x-auto
+
+rounded-[24px]
+
+lg:rounded-[32px]
+
+border
+
+border-slate-800
+
+"
+
+>
+
+<table className="w-full min-w-[700px]">
+
+
 
 <thead className="bg-slate-950">
 
 <tr>
 
-<th className="px-8 py-6 text-left">
+<th className="px-6 lg:px-8 py-6 text-left">
 
 Treatment
 
 </th>
 
-<th className="px-8 py-6">
+<th className="px-6 lg:px-8 py-6">
 
 USA
 
 </th>
 
-<th className="px-8 py-6">
+<th className="px-6 lg:px-8 py-6">
 
 UK
 
 </th>
 
-<th className="px-8 py-6 text-green-400">
+<th className="px-6 lg:px-8 py-6 text-green-400">
 
 India
 
@@ -818,124 +1012,87 @@ India
 
 </thead>
 
-
-
 <tbody>
 
 <tr className="border-t border-slate-800 hover:bg-slate-950/70">
 
-<td className="px-8 py-7 font-semibold">
-
+<td className="px-6 lg:px-8 py-7 font-semibold">
 Heart Surgery
-
 </td>
 
 <td className="text-center">
-
 $120,000
-
 </td>
 
 <td className="text-center">
-
 $70,000
-
 </td>
 
 <td className="text-center text-green-400 font-bold">
-
 $6,500
-
 </td>
 
 </tr>
 
 
-
 <tr className="border-t border-slate-800 hover:bg-slate-950/70">
 
-<td className="px-8 py-7 font-semibold">
-
+<td className="px-6 lg:px-8 py-7 font-semibold">
 IVF Treatment
-
 </td>
 
 <td className="text-center">
-
 $20,000
-
 </td>
 
 <td className="text-center">
-
 $12,000
-
 </td>
 
 <td className="text-center text-green-400 font-bold">
-
 $3,000
-
 </td>
 
 </tr>
 
 
-
 <tr className="border-t border-slate-800 hover:bg-slate-950/70">
 
-<td className="px-8 py-7 font-semibold">
-
+<td className="px-6 lg:px-8 py-7 font-semibold">
 Kidney Transplant
-
 </td>
 
 <td className="text-center">
-
 $300,000
-
 </td>
 
 <td className="text-center">
-
 $150,000
-
 </td>
 
 <td className="text-center text-green-400 font-bold">
-
 $12,000
-
 </td>
 
 </tr>
 
 
-
 <tr className="border-t border-slate-800 hover:bg-slate-950/70">
 
-<td className="px-8 py-7 font-semibold">
-
+<td className="px-6 lg:px-8 py-7 font-semibold">
 Liver Transplant
-
 </td>
 
 <td className="text-center">
-
 $500,000
-
 </td>
 
 <td className="text-center">
-
 $180,000
-
 </td>
 
 <td className="text-center text-green-400 font-bold">
-
 $28,000
-
 </td>
 
 </tr>
@@ -951,114 +1108,11 @@ $28,000
 </section>
 
 
-
-{/* PATIENT JOURNEY */}
-
-<section className="py-28">
-
-<div className="max-w-7xl mx-auto px-4">
-
-<div className="text-center">
-
-<p className="uppercase tracking-[4px] text-blue-400 text-sm font-semibold">
-
-Simple Process
-
-</p>
-
-<h2 className="text-5xl font-bold mt-5">
-
-Your Treatment Journey
-
-</h2>
-
-<p className="text-slate-400 max-w-3xl mx-auto mt-6">
-
-From consultation to recovery,
-
-our team assists you at every step.
-
-</p>
-
-</div>
-
-
-
-<div className="grid md:grid-cols-5 gap-8 mt-20">
-
-{
-
-[
-
-"Submit Reports",
-
-"Doctor Review",
-
-"Hospital Recommendation",
-
-"Travel To India",
-
-"Treatment & Recovery",
-
-].map((step,index)=>(
-
-<div
-
-key={step}
-
-className="text-center"
-
->
-
-<div
-
-className="mx-auto
-
-w-24 h-24
-
-rounded-full
-
-bg-blue-500/10
-
-border border-blue-500/20
-
-flex items-center justify-center"
-
->
-
-<span className="text-3xl font-bold text-blue-400">
-
-{index+1}
-
-</span>
-
-</div>
-
-<h3 className="text-xl font-semibold mt-8">
-
-{step}
-
-</h3>
-
-</div>
-
-))
-
-}
-
-</div>
-
-</div>
-
-</section>
-
-
-
 {/* TRUST */}
 
-<section className="py-28 border-t border-slate-900">
+<section className="py-20 lg:py-28 border-t border-slate-900">
 
-<div className="max-w-7xl mx-auto px-4">
+<div className="max-w-7xl mx-auto px-5 lg:px-4">
 
 <div className="text-center">
 
@@ -1068,7 +1122,7 @@ Why HealWithIndia
 
 </p>
 
-<h2 className="text-5xl font-bold mt-5">
+<h2 className="text-4xl lg:text-5xl font-bold mt-5">
 
 Trusted Healthcare Partner
 
@@ -1078,9 +1132,9 @@ Trusted Healthcare Partner
 
 
 
-<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-20">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mt-16">
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] p-6 lg:p-8">
 
 <ShieldCheck
 
@@ -1090,7 +1144,7 @@ className="text-blue-400"
 
 />
 
-<h3 className="text-2xl font-bold mt-8">
+<h3 className="text-xl lg:text-2xl font-bold mt-6 lg:mt-8">
 
 Verified Hospitals
 
@@ -1110,7 +1164,7 @@ standards.
 
 
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] p-6 lg:p-8">
 
 <Globe
 
@@ -1120,7 +1174,7 @@ className="text-green-400"
 
 />
 
-<h3 className="text-2xl font-bold mt-8">
+<h3 className="text-xl lg:text-2xl font-bold mt-6 lg:mt-8">
 
 Global Patients
 
@@ -1140,7 +1194,7 @@ quality healthcare.
 
 
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] p-6 lg:p-8">
 
 <Clock3
 
@@ -1150,7 +1204,7 @@ className="text-cyan-400"
 
 />
 
-<h3 className="text-2xl font-bold mt-8">
+<h3 className="text-xl lg:text-2xl font-bold mt-6 lg:mt-8">
 
 Quick Treatment
 
@@ -1168,7 +1222,7 @@ faster access to expert doctors.
 
 
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] p-6 lg:p-8">
 
 <ShieldPlus
 
@@ -1178,7 +1232,7 @@ className="text-purple-400"
 
 />
 
-<h3 className="text-2xl font-bold mt-8">
+<h3 className="text-xl lg:text-2xl font-bold mt-6 lg:mt-8">
 
 End To End Support
 
@@ -1204,21 +1258,21 @@ and travel support.
 
 {/* STATS */}
 
-<section className="py-28">
+<section className="py-20 lg:py-28">
 
-<div className="max-w-7xl mx-auto px-4">
+<div className="max-w-7xl mx-auto px-5 lg:px-4">
 
-<div className="grid md:grid-cols-4 gap-8 text-center">
+<div className="grid grid-cols-2 lg:grid-cols-4 gap-5 text-center">
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] py-12">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] py-8 lg:py-12">
 
-<h3 className="text-6xl font-bold text-blue-400">
+<h3 className="text-4xl lg:text-6xl font-bold text-blue-400">
 
 30+
 
 </h3>
 
-<p className="text-slate-400 mt-5 text-lg">
+<p className="text-slate-400 mt-5 text-sm lg:text-lg">
 
 Partner Hospitals
 
@@ -1228,9 +1282,9 @@ Partner Hospitals
 
 
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] py-12">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] py-8 lg:py-12">
 
-<h3 className="text-6xl font-bold text-green-400">
+<h3 className="text-4xl lg:text-6xl font-bold text-green-400">
 
 100+
 
@@ -1246,15 +1300,15 @@ Countries Served
 
 
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] py-12">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] py-8 lg:py-12">
 
-<h3 className="text-6xl font-bold text-cyan-400">
+<h3 className="text-4xl lg:text-6xl font-bold text-cyan-400">
 
 20+
 
 </h3>
 
-<p className="text-slate-400 mt-5 text-lg">
+<p className="text-slate-400 mt-5 text-sm lg:text-lg">
 
 Medical Specialties
 
@@ -1264,15 +1318,15 @@ Medical Specialties
 
 
 
-<div className="bg-slate-950 border border-slate-800 rounded-[32px] py-12">
+<div className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[32px] py-8 lg:py-12">
 
-<h3 className="text-6xl font-bold text-purple-400">
+<h3 className="text-4xl lg:text-6xl font-bold text-purple-400">
 
 24/7
 
 </h3>
 
-<p className="text-slate-400 mt-5 text-lg">
+<p className="text-slate-400 mt-5 text-sm lg:text-lg">
 
 Patient Support
 
@@ -1290,9 +1344,9 @@ Patient Support
 
 {/* FAQ */}
 
-<section className="py-28 border-t border-slate-900">
+<section className="py-20 lg:py-28 border-t border-slate-900">
 
-<div className="max-w-5xl mx-auto px-4">
+<div className="max-w-5xl mx-auto px-5 lg:px-4">
 
 <div className="text-center">
 
@@ -1302,7 +1356,7 @@ Frequently Asked Questions
 
 </p>
 
-<h2 className="text-5xl font-bold mt-5">
+<h2 className="text-4xl lg:text-5xl font-bold mt-5">
 
 Everything You Need To Know
 
@@ -1312,7 +1366,7 @@ Everything You Need To Know
 
 
 
-<div className="space-y-6 mt-20">
+<div className="space-y-5 mt-14 lg:mt-20">
 
 {
 
@@ -1364,17 +1418,17 @@ a:"Simply submit your medical reports and our healthcare experts will guide you 
 
 key={faq.q}
 
-className="bg-slate-950 border border-slate-800 rounded-[28px] p-8"
+className="bg-slate-950 border border-slate-800 rounded-[24px] lg:rounded-[28px] p-6 lg:p-8"
 
 >
 
-<h3 className="text-2xl font-semibold">
+<h3 className="text-xl lg:text-2xl font-semibold">
 
 {faq.q}
 
 </h3>
 
-<p className="text-slate-400 mt-5 leading-relaxed text-lg">
+<p className="text-slate-400 mt-5 leading-relaxed text-sm lg:text-lg">
 
 {faq.a}
 
@@ -1396,7 +1450,7 @@ className="bg-slate-950 border border-slate-800 rounded-[28px] p-8"
 
 {/* CTA */}
 
-<section className="relative overflow-hidden py-32">
+<section className="relative overflow-hidden py-20 lg:py-32">
 
 <div className="absolute inset-0 bg-gradient-to-r from-blue-950 via-slate-950 to-cyan-950" />
 
@@ -1410,9 +1464,9 @@ className="bg-slate-950 border border-slate-800 rounded-[28px] p-8"
 
 
 
-<div className="relative max-w-5xl mx-auto px-4 text-center">
+<div className="relative max-w-5xl mx-auto px-5 lg:px-4 text-center">
 
-<h2 className="text-6xl lg:text-7xl font-bold leading-tight">
+<h2 className="text-4xl lg:text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight">
 
 Need Help Choosing
 
@@ -1424,7 +1478,7 @@ A Treatment?
 
 
 
-<p className="text-slate-300 text-xl max-w-3xl mx-auto mt-10 leading-relaxed">
+<p className="text-slate-300 text-base lg:text-xl max-w-3xl mx-auto mt-10 leading-relaxed">
 
 Submit your medical reports and receive
 
@@ -1438,13 +1492,13 @@ from our healthcare experts.
 
 
 
-<div className="flex justify-center gap-5 flex-wrap mt-14">
+<div className="flex flex-col sm:flex-row justify-center gap-4 mt-10 lg:mt-14">
 
 <a
 
 href="/#consultation"
 
-className="bg-blue-600 hover:bg-blue-700 px-10 py-5 rounded-2xl font-semibold text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(37,99,235,0.4)]"
+className="bg-blue-600 hover:bg-blue-700 px-10 py-5 rounded-2xl font-semibold text-sm lg:text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(37,99,235,0.4)]"
 
 >
 
@@ -1458,7 +1512,7 @@ Get Free Medical Opinion
 
 href="/hospitals"
 
-className="border border-slate-700 hover:border-blue-500 px-10 py-5 rounded-2xl font-semibold text-lg transition"
+className="border border-slate-700 hover:border-blue-500 px-10 py-5 rounded-2xl font-semibold text-sm lg:text-lg transition"
 
 >
 

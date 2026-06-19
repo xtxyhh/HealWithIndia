@@ -1,229 +1,855 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { useRouter } from "next/navigation";
+
+import { supabase } from "@/lib/supabase";
 
 import {
 
-  Lock,
+Mail,
 
-  Mail,
+Lock,
 
-  ShieldCheck,
+Eye,
+
+EyeOff,
+
+ShieldCheck,
+
+Loader2,
+
+ArrowRight,
 
 } from "lucide-react";
 
-export default function LoginPage() {
 
-  const router = useRouter();
 
-  const [email,setEmail] = useState("");
+export default function LoginPage(){
 
-  const [password,setPassword] = useState("");
+const router=useRouter();
 
-  const [loading,setLoading] = useState(false);
 
-  const [error,setError] = useState("");
 
-  const handleLogin = async () => {
+const [email,setEmail]=useState("");
 
-    setError("");
+const [password,setPassword]=useState("");
 
-    if(!email || !password){
+const [showPassword,setShowPassword]=useState(false);
 
-      setError("Please enter email and password.");
+const [loading,setLoading]=useState(false);
 
-      return;
+const [error,setError]=useState("");
 
-    }
 
-    setLoading(true);
 
-    const {
+const handleLogin=async()=>{
 
-      error,
 
-    } = await supabase.auth.signInWithPassword({
 
-      email,
+setError("");
 
-      password,
 
-    });
 
-    setLoading(false);
+if(!email || !password){
 
-    if(error){
+setError("Please enter email and password.");
 
-      setError(error.message);
+return;
 
-      return;
+}
 
-    }
 
-    router.push("/admin");
 
-    router.refresh();
+try{
 
-  };
 
-  return (
 
-    <main className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center px-4">
+setLoading(true);
 
-      <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-blue-600/20 blur-[150px] rounded-full" />
 
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-cyan-600/10 blur-[150px] rounded-full" />
 
-      <div className="relative w-full max-w-md">
+const {
 
-        <div className="bg-slate-950 border border-slate-800 rounded-[32px] p-10 shadow-2xl">
+error,
 
-          <div className="flex justify-center">
+}=await supabase.auth.signInWithPassword({
 
-            <div className="bg-blue-600/15 p-5 rounded-3xl">
+email,
 
-              <ShieldCheck
+password,
 
-                size={42}
+});
 
-                className="text-blue-400"
 
-              />
 
-            </div>
+if(error){
 
-          </div>
+setError(error.message);
 
-          <h1 className="text-4xl font-bold text-white text-center mt-8">
+setLoading(false);
 
-            Admin Login
+return;
 
-          </h1>
+}
 
-          <p className="text-slate-400 text-center mt-3">
 
-            Sign in to HealWithIndia Dashboard
 
-          </p>
+router.replace("/admin");
 
-          <div className="space-y-5 mt-10">
 
-            <div className="relative">
 
-              <Mail
+}
 
-                size={18}
+catch{
 
-                className="absolute left-5 top-5 text-slate-500"
+setError("Something went wrong.");
 
-              />
+}
 
-              <input
 
-                type="email"
 
-                placeholder="Email Address"
+setLoading(false);
 
-                value={email}
+};
 
-                onChange={(e)=>setEmail(e.target.value)}
 
-                onKeyDown={(e)=>{
 
-                  if(e.key==="Enter")
 
-                  handleLogin();
 
-                }}
+return(
 
-                className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 pl-14 pr-4 text-white focus:outline-none focus:border-blue-500"
 
-              />
 
-            </div>
+<main
 
-            <div className="relative">
+className="
 
-              <Lock
+min-h-screen
 
-                size={18}
+bg-[#020817]
 
-                className="absolute left-5 top-5 text-slate-500"
+relative
 
-              />
+overflow-hidden
 
-              <input
+flex
 
-                type="password"
+items-center
 
-                placeholder="Password"
+justify-center
 
-                value={password}
+px-5
 
-                onChange={(e)=>setPassword(e.target.value)}
+"
 
-                onKeyDown={(e)=>{
+>
 
-                  if(e.key==="Enter")
 
-                  handleLogin();
 
-                }}
 
-                className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 pl-14 pr-4 text-white focus:outline-none focus:border-blue-500"
 
-              />
+{/* AURORA */}
 
-            </div>
 
-            {
 
-              error &&
+<div className="absolute inset-0">
 
-              <div className="text-red-400 text-sm">
 
-                {error}
 
-              </div>
+<div
 
-            }
+className="
 
-            <button
+absolute
 
-              onClick={handleLogin}
+top-[-250px]
 
-              disabled={loading}
+left-[-200px]
 
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-4 rounded-2xl font-semibold transition"
+w-[700px]
 
-            >
+h-[700px]
 
-              {
+bg-blue-600/20
 
-                loading
+rounded-full
 
-                ?
+blur-[180px]
 
-                "Signing In..."
+"
 
-                :
+/>
 
-                "Login"
 
-              }
 
-            </button>
+<div
 
-          </div>
+className="
 
-        </div>
+absolute
 
-      </div>
+bottom-[-250px]
 
-    </main>
+right-[-150px]
 
-  );
+w-[650px]
+
+h-[650px]
+
+bg-cyan-500/15
+
+rounded-full
+
+blur-[180px]
+
+"
+
+/>
+
+
+
+<div
+
+className="
+
+absolute
+
+inset-0
+
+opacity-[0.03]
+
+bg-[linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)]
+
+bg-[size:70px_70px]
+
+"
+
+/>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div
+
+className="
+
+relative
+
+z-10
+
+w-full
+
+max-w-[520px]
+
+"
+
+>
+
+
+
+
+
+<div
+
+className="
+
+rounded-[42px]
+
+border
+
+border-slate-800
+
+bg-slate-900/50
+
+backdrop-blur-3xl
+
+shadow-[0_30px_100px_rgba(0,0,0,.45)]
+
+overflow-hidden
+
+"
+
+>
+
+
+
+
+
+{/* HEADER */}
+
+
+
+<div className="px-10 pt-12 text-center">
+
+
+
+<div
+
+className="
+
+h-24
+
+w-24
+
+mx-auto
+
+rounded-[32px]
+
+bg-blue-500/10
+
+border
+
+border-blue-500/20
+
+flex
+
+items-center
+
+justify-center
+
+"
+
+>
+
+<ShieldCheck
+
+size={46}
+
+className="text-blue-400"
+
+/>
+
+</div>
+
+
+
+
+
+
+
+<p
+
+className="
+
+uppercase
+
+tracking-[5px]
+
+text-blue-400
+
+text-sm
+
+mt-8
+
+"
+
+>
+
+HealWithIndia
+
+</p>
+
+
+
+
+
+
+
+<h1
+
+className="
+
+text-[50px]
+
+font-bold
+
+text-white
+
+mt-4
+
+"
+
+>
+
+Admin Portal
+
+</h1>
+
+
+
+
+
+
+
+<p
+
+className="
+
+text-slate-400
+
+mt-5
+
+text-lg
+
+"
+
+>
+
+Secure access to
+
+HealWithIndia CRM
+
+</p>
+
+
+
+</div>
+
+
+
+
+
+
+
+{/* FORM */}
+
+
+
+<div className="px-10 pb-12 pt-10">
+
+
+
+
+
+<div className="space-y-6">
+
+
+
+
+
+<div className="relative">
+
+<Mail
+
+size={20}
+
+className="
+
+absolute
+
+left-5
+
+top-5
+
+text-slate-500
+
+"
+
+/>
+
+
+
+<input
+
+type="email"
+
+placeholder="Email"
+
+value={email}
+
+onChange={(e)=>
+
+setEmail(e.target.value)
+
+}
+
+onKeyDown={(e)=>{
+
+if(e.key==="Enter"){
+
+handleLogin();
+
+}
+
+}}
+
+className="
+
+w-full
+
+bg-slate-950
+
+border
+
+border-slate-800
+
+rounded-[24px]
+
+py-5
+
+pl-14
+
+pr-5
+
+text-white
+
+outline-none
+
+focus:border-blue-500
+
+transition-all
+
+"
+
+/>
+
+</div>
+
+
+
+
+
+
+
+<div className="relative">
+
+<Lock
+
+size={20}
+
+className="
+
+absolute
+
+left-5
+
+top-5
+
+text-slate-500
+
+"
+
+/>
+
+
+
+<input
+
+type={
+
+showPassword
+
+?
+
+"text"
+
+:
+
+"password"
+
+}
+
+placeholder="Password"
+
+value={password}
+
+onChange={(e)=>
+
+setPassword(
+
+e.target.value
+
+)
+
+}
+
+onKeyDown={(e)=>{
+
+if(e.key==="Enter"){
+
+handleLogin();
+
+}
+
+}}
+
+className="
+
+w-full
+
+bg-slate-950
+
+border
+
+border-slate-800
+
+rounded-[24px]
+
+py-5
+
+pl-14
+
+pr-16
+
+text-white
+
+outline-none
+
+focus:border-blue-500
+
+transition-all
+
+"
+
+/>
+
+
+
+
+
+
+
+<button
+
+type="button"
+
+onClick={()=>
+
+setShowPassword(
+
+!showPassword
+
+)
+
+}
+
+className="
+
+absolute
+
+right-5
+
+top-5
+
+text-slate-500
+
+"
+
+>
+
+{
+
+showPassword
+
+?
+
+<EyeOff size={20}/>
+
+:
+
+<Eye size={20}/>
+
+}
+
+</button>
+
+
+
+</div>
+
+
+
+
+
+
+
+{
+
+error &&
+
+<div
+
+className="
+
+rounded-[20px]
+
+border
+
+border-red-500/20
+
+bg-red-500/10
+
+text-red-400
+
+px-5
+
+py-4
+
+"
+
+>
+
+{error}
+
+</div>
+
+}
+
+
+
+
+
+
+
+<button
+
+onClick={handleLogin}
+
+disabled={loading}
+
+className="
+
+w-full
+
+group
+
+rounded-[24px]
+
+bg-gradient-to-r
+
+from-blue-600
+
+to-cyan-500
+
+py-5
+
+font-semibold
+
+text-lg
+
+hover:scale-[1.02]
+
+disabled:opacity-50
+
+transition-all
+
+duration-300
+
+shadow-[0_0_50px_rgba(37,99,235,.35)]
+
+"
+
+>
+
+{
+
+loading
+
+?
+
+<div className="flex justify-center">
+
+<Loader2
+
+size={24}
+
+className="animate-spin"
+
+/>
+
+</div>
+
+:
+
+<div className="flex justify-center items-center gap-3">
+
+Login
+
+
+
+<ArrowRight
+
+size={20}
+
+className="
+
+group-hover:translate-x-1
+
+transition
+
+"
+
+/>
+
+</div>
+
+}
+
+</button>
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+<p
+
+className="
+
+text-center
+
+text-slate-500
+
+mt-8
+
+"
+
+>
+
+Protected by Supabase Auth
+
+</p>
+
+
+
+
+
+</div>
+
+
+
+
+
+</main>
+
+)
 
 }

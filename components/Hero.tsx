@@ -1,538 +1,423 @@
 ﻿import Image from "next/image";
 
 import {
-
-ShieldCheck,
-Globe,
-Building2,
-UserRoundCheck,
-ArrowRight,
-CheckCircle,
-
+  ShieldCheck,
+  Globe,
+  Building2,
+  UserRoundCheck,
+  ArrowRight,
+  CheckCircle,
+  HeartPulse,
+  Stethoscope,
+  Sparkles,
 } from "lucide-react";
-
 
 export default function Hero() {
 
-const treatments=[
+  const treatments = [
+    "Cardiology",
+    "Oncology",
+    "Orthopedics",
+    "Organ Transplant",
+    "IVF",
+    "Neurology",
+  ];
 
-"Cardiology",
-"Oncology",
-"Organ Transplants",
-"Orthopedics",
-"IVF",
 
-]
+  const countries = [
+    "🇺🇸 USA",
+    "🇬🇧 UK",
+    "🇦🇪 UAE",
+    "🇨🇦 Canada",
+    "🇳🇬 Nigeria",
+    "🇦🇺 Australia",
+  ];
 
-const countries=[
 
-"🇺🇸 USA",
-"🇬🇧 UK",
-"🇦🇪 UAE",
-"🇳🇬 Nigeria",
-"🇨🇦 Canada",
-"🇦🇺 Australia",
+  const stats = [
+    {
+      number: "50+",
+      label: "Partner Hospitals",
+      color: "text-blue-400",
+      border: "hover:border-blue-500/60",
+    },
 
-]
+    {
+      number: "90%",
+      label: "Cost Savings",
+      color: "text-green-400",
+      border: "hover:border-green-500/60",
+    },
 
-const hospitals=[
+    {
+      number: "24/7",
+      label: "Patient Support",
+      color: "text-cyan-400",
+      border: "hover:border-cyan-500/60",
+    },
+  ];
 
-"apollo",
-"fortis",
-"medanta",
-"max",
-"manipal",
-"narayana",
 
-]
+  return (
 
-return(
+    <>
 
-<>
+      <section
 
-<section
+        id="home"
 
-id="home"
+        className="
 
-className="
+        relative
 
-relative
+        overflow-hidden
 
-overflow-hidden
+        bg-[#020817]
 
-bg-[#020617]
+        text-white
 
-text-white
+        "
 
-"
+      >
 
->
+        {/* BACKGROUND */}
 
 
-{/* BACKGROUND */}
+        <div className="absolute inset-0 -z-0">
 
 
-<div className="absolute inset-0">
+          <div
 
+            className="
 
-<div className="
+            absolute
 
-absolute
+            top-[-250px]
 
-top-[-200px]
+            left-[-200px]
 
-left-[-150px]
+            w-[650px]
 
-w-[700px]
+            h-[650px]
 
-h-[700px]
+            rounded-full
 
-bg-blue-600/20
+            bg-blue-600/20
 
-blur-[180px]
+            blur-[170px]
 
-rounded-full
+            "
 
-"/>
+          />
 
 
+          <div
 
-<div className="
+            className="
 
-absolute
+            absolute
 
-bottom-[-250px]
+            bottom-[-300px]
 
-right-[-150px]
+            right-[-150px]
 
-w-[700px]
+            w-[650px]
 
-h-[700px]
+            h-[650px]
 
-bg-cyan-500/10
+            rounded-full
 
-blur-[180px]
+            bg-cyan-500/15
 
-rounded-full
+            blur-[170px]
 
-"/>
+            "
 
+          />
 
-<div className="
 
-absolute
 
-inset-0
+          <div
 
-bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.10),transparent_70%)]
+            className="
 
-"/>
+            absolute
 
+            inset-0
 
-</div>
+            bg-[radial-gradient(circle_at_center,rgba(37,99,235,.08),transparent_70%)]
 
+            "
 
+          />
 
 
-<div className="
 
-relative
+          <div
 
-max-w-[1450px]
+            className="
 
-mx-auto
+            absolute
 
-px-6
+            inset-0
 
-lg:px-10
+            opacity-[0.03]
 
-pt-24
+            bg-[linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)]
 
-pb-28
+            bg-[size:80px_80px]
 
-">
+            "
 
+          />
 
-<div className="
+        </div>
 
-grid
 
-lg:grid-cols-2
 
-gap-24
 
-items-center
 
-">
+        <div
 
+          className="
 
+          relative
 
+          z-10
 
-{/* LEFT */}
+          max-w-[1450px]
 
+          mx-auto
 
-<div>
+          px-6
 
+          sm:px-8
 
-<div className="
+          lg:px-10
 
-inline-flex
+          pt-24
 
-items-center
+          md:pt-32
 
-gap-2
+          pb-20
 
-px-6
+          "
 
-py-3
+        >
 
-rounded-full
 
-border
 
-border-blue-500/30
+          <div
 
-bg-blue-500/10
+            className="
 
-backdrop-blur-2xl
+            grid
 
-text-blue-300
+            lg:grid-cols-2
 
-text-sm
+            gap-16
 
-font-medium
+            xl:gap-24
 
-shadow-[0_0_40px_rgba(37,99,235,.15)]
+            items-center
 
-">
+            "
 
-<CheckCircle
+          >
 
-size={16}
 
-/>
 
-Trusted By International Patients
+            {/* LEFT SIDE */}
 
-</div>
 
 
+            <div className="relative">
 
 
 
-<h1
+              <div
 
-className="
+                className="
 
-mt-10
+                inline-flex
 
-text-[65px]
+                items-center
 
-lg:text-[88px]
+                gap-3
 
-font-bold
+                px-5
 
-leading-[0.95]
+                py-3
 
-tracking-[-4px]
+                rounded-full
 
-"
+                border
 
->
+                border-blue-500/20
 
-Trusted
+                bg-blue-500/10
 
-Medical Care
+                backdrop-blur-2xl
 
-<br/>
+                text-blue-300
 
-In
+                text-sm
 
-<span
+                font-medium
 
-className="
+                shadow-[0_0_40px_rgba(37,99,235,.15)]
 
-bg-gradient-to-r
+                "
 
-from-blue-400
+              >
 
-via-cyan-300
+                <Sparkles size={16} />
 
-to-cyan-500
+                Trusted By International Patients
 
-bg-clip-text
+              </div>
 
-text-transparent
 
-"
 
->
 
-{" "}India
 
-</span>
+              <h1
 
-<br/>
+                className="
 
-Save Up To
+                mt-8
 
-<span
+                text-[42px]
 
-className="
+                sm:text-[55px]
 
-text-green-400
+                lg:text-[72px]
 
-"
+                xl:text-[88px]
 
->
+                font-bold
 
-{" "}90%
+                leading-[0.95]
 
-</span>
+                tracking-[-2px]
 
-<br/>
+                "
 
-Without
+              >
 
-Compromising
+                World-Class
 
-Quality
+                <br />
 
-</h1>
 
 
+                <span
 
+                  className="
 
+                  bg-gradient-to-r
 
-<p
+                  from-blue-400
 
-className="
+                  via-cyan-300
 
-mt-10
+                  to-cyan-500
 
-text-xl
+                  bg-clip-text
 
-leading-[1.9]
+                  text-transparent
 
-text-slate-300
+                  "
 
-max-w-2xl
+                >
 
-"
+                  Medical Care
 
->
+                </span>
 
-Access JCI & NABH accredited hospitals,
 
-internationally trained doctors,
 
-and personalized healthcare support
+                <br />
 
-for Cardiology, Oncology,
 
-Organ Transplants, IVF
 
-and advanced treatments.
+                In India
 
-</p>
 
 
+                <br />
 
 
 
-<div
+                Save Up To
 
-className="
 
-flex
 
-flex-wrap
+                <span className="text-green-400">
 
-gap-4
+                  {" "}90%
 
-mt-10
+                </span>
 
-"
+              </h1>
 
->
 
-{
 
-treatments.map((item)=>(
 
-<div
 
-key={item}
+              <p
 
-className="
+                className="
 
-px-5
+                mt-8
 
-py-3
+                max-w-2xl
 
-rounded-full
+                text-base
 
-border
+                sm:text-lg
 
-border-slate-700
+                lg:text-xl
 
-bg-slate-900/60
+                leading-[1.9]
 
-backdrop-blur-2xl
+                text-slate-300
 
-text-sm
+                "
 
-text-slate-200
+              >
 
-hover:border-blue-500
+                Access internationally accredited hospitals,
 
-hover:bg-blue-500/10
+                experienced doctors,
 
-transition-all
+                and dedicated care coordinators for
 
-duration-300
+                Cardiology,
 
-cursor-pointer
+                Oncology,
 
-"
+                Organ Transplants,
 
->
+                IVF,
 
-{item}
+                Orthopedics
 
-</div>
+                and advanced treatments —
 
-))
+                all at a fraction of the cost.
 
-}
 
-</div>
 
+              </p>
 
 
 
 
-<div
 
-className="
+              {/* TREATMENTS */}
 
-flex
 
-flex-col
-
-sm:flex-row
-
-gap-5
-
-mt-12
-
-"
-
->
-
-
-<a
-
-href="#consultation"
-
-className="
-
-group
-
-flex
-
-items-center
-
-justify-center
-
-gap-3
-
-px-10
-
-py-5
-
-rounded-[22px]
-
-bg-blue-600
-
-hover:bg-blue-700
-
-font-semibold
-
-text-lg
-
-shadow-[0_0_60px_rgba(37,99,235,.35)]
-
-transition-all
-
-hover:scale-[1.03]
-
-"
-
->
-
-Get Free Medical Opinion
-
-<ArrowRight
-
-size={20}
-
-className="
-
-group-hover:translate-x-1
-
-transition
-
-"
-
-/>
-
-</a>
-
-
-
-<a
-
-href="/treatments"
-
-className="
-
-px-10
-
-py-5
-
-rounded-[22px]
-
-border
-
-border-slate-700
-
-bg-slate-900/50
-
-backdrop-blur-xl
-
-hover:border-blue-500
-
-hover:bg-blue-500/5
-
-text-lg
-
-font-medium
-
-transition-all
-
-"
-
->
-
-Explore Treatments
-
-</a>
-
-</div>
-
-
-              {/* TRUST ROW */}
 
               <div
 
@@ -542,7 +427,210 @@ Explore Treatments
 
                 flex-wrap
 
-                gap-8
+                gap-3
+
+                mt-10
+
+                "
+
+              >
+
+                {
+
+                  treatments.map((item)=>(
+
+                    <div
+
+                      key={item}
+
+                      className="
+
+                      px-5
+
+                      py-3
+
+                      rounded-full
+
+                      border
+
+                      border-slate-700
+
+                      bg-slate-900/60
+
+                      backdrop-blur-xl
+
+                      text-sm
+
+                      text-slate-200
+
+                      hover:border-blue-500
+
+                      hover:bg-blue-500/10
+
+                      transition-all
+
+                      duration-300
+
+                      cursor-pointer
+
+                      "
+
+                    >
+
+                      {item}
+
+                    </div>
+
+                  ))
+
+                }
+
+              </div>
+
+
+
+
+
+              {/* CTA */}
+
+
+
+              <div
+
+                className="
+
+                flex
+
+                flex-col
+
+                sm:flex-row
+
+                gap-5
+
+                mt-12
+
+                "
+
+              >
+
+                <a
+
+                  href="#consultation"
+
+                  className="
+
+                  group
+
+                  flex
+
+                  items-center
+
+                  justify-center
+
+                  gap-3
+
+                  px-8
+
+                  py-5
+
+                  rounded-[22px]
+
+                  bg-blue-600
+
+                  hover:bg-blue-700
+
+                  text-lg
+
+                  font-semibold
+
+                  shadow-[0_0_60px_rgba(37,99,235,.35)]
+
+                  transition-all
+
+                  duration-300
+
+                  hover:scale-[1.02]
+
+                  "
+
+                >
+
+                  Get Free Medical Opinion
+
+
+
+                  <ArrowRight
+
+                    size={20}
+
+                    className="
+
+                    transition
+
+                    group-hover:translate-x-1
+
+                    "
+
+                  />
+
+                </a>
+
+
+
+                <a
+
+                  href="/treatments"
+
+                  className="
+
+                  px-8
+
+                  py-5
+
+                  rounded-[22px]
+
+                  border
+
+                  border-slate-700
+
+                  bg-slate-900/50
+
+                  backdrop-blur-xl
+
+                  hover:border-blue-500
+
+                  hover:bg-blue-500/5
+
+                  transition-all
+
+                  text-lg
+
+                  font-medium
+
+                  "
+
+                >
+
+                  Explore Treatments
+
+                </a>
+
+              </div>
+
+              {/* TRUST FEATURES */}
+
+
+              <div
+
+                className="
+
+                flex
+
+                flex-wrap
+
+                gap-x-8
+
+                gap-y-5
 
                 mt-14
 
@@ -560,6 +648,8 @@ Explore Treatments
 
                   />
 
+
+
                   <span className="text-slate-300">
 
                     HIPAA Compliant
@@ -567,6 +657,8 @@ Explore Treatments
                   </span>
 
                 </div>
+
+
 
 
 
@@ -580,6 +672,8 @@ Explore Treatments
 
                   />
 
+
+
                   <span className="text-slate-300">
 
                     JCI Accredited Hospitals
@@ -587,6 +681,8 @@ Explore Treatments
                   </span>
 
                 </div>
+
+
 
 
 
@@ -600,6 +696,8 @@ Explore Treatments
 
                   />
 
+
+
                   <span className="text-slate-300">
 
                     Dedicated Care Coordinator
@@ -607,6 +705,8 @@ Explore Treatments
                   </span>
 
                 </div>
+
+
 
 
 
@@ -620,6 +720,8 @@ Explore Treatments
 
                   />
 
+
+
                   <span className="text-slate-300">
 
                     Patients Worldwide
@@ -629,6 +731,8 @@ Explore Treatments
                 </div>
 
               </div>
+
+
 
 
 
@@ -642,211 +746,95 @@ Explore Treatments
 
                 grid
 
-                grid-cols-3
+                grid-cols-1
 
-                gap-7
+                sm:grid-cols-3
 
-                mt-16
+                gap-5
+
+                mt-14
 
                 "
 
               >
 
+                {
 
+                  stats.map((item)=>(
 
-                <div
+                    <div
 
-                  className="
+                      key={item.label}
 
-                  rounded-[28px]
+                      className={`
 
-                  border
+                      rounded-[28px]
 
-                  border-slate-800
+                      border
 
-                  bg-slate-900/50
+                      border-slate-800
 
-                  backdrop-blur-2xl
+                      ${item.border}
 
-                  p-8
+                      bg-slate-900/50
 
-                  hover:border-blue-500
+                      backdrop-blur-2xl
 
-                  transition-all
+                      p-7
 
-                  "
+                      transition-all
 
-                >
+                      duration-300
 
-                  <div
+                      hover:-translate-y-1
 
-                    className="
+                      `}
 
-                    text-5xl
+                    >
 
-                    font-bold
+                      <div
 
-                    text-blue-400
+                        className={`
 
-                    "
+                        text-4xl
 
-                  >
+                        lg:text-5xl
 
-                    50+
+                        font-bold
 
-                  </div>
+                        ${item.color}
 
+                        `}
 
+                      >
 
-                  <p
+                        {item.number}
 
-                    className="
+                      </div>
 
-                    text-slate-400
 
-                    mt-3
 
-                    "
+                      <p
 
-                  >
+                        className="
 
-                    Partner Hospitals
+                        text-slate-400
 
-                  </p>
+                        mt-3
 
-                </div>
+                        "
 
+                      >
 
+                        {item.label}
 
+                      </p>
 
+                    </div>
 
-                <div
+                  ))
 
-                  className="
-
-                  rounded-[28px]
-
-                  border
-
-                  border-slate-800
-
-                  bg-slate-900/50
-
-                  backdrop-blur-2xl
-
-                  p-8
-
-                  hover:border-green-500
-
-                  transition-all
-
-                  "
-
-                >
-
-                  <div
-
-                    className="
-
-                    text-5xl
-
-                    font-bold
-
-                    text-green-400
-
-                    "
-
-                  >
-
-                    90%
-
-                  </div>
-
-
-
-                  <p
-
-                    className="
-
-                    text-slate-400
-
-                    mt-3
-
-                    "
-
-                  >
-
-                    Healthcare Savings
-
-                  </p>
-
-                </div>
-
-
-
-
-
-                <div
-
-                  className="
-
-                  rounded-[28px]
-
-                  border
-
-                  border-slate-800
-
-                  bg-slate-900/50
-
-                  backdrop-blur-2xl
-
-                  p-8
-
-                  hover:border-cyan-500
-
-                  transition-all
-
-                  "
-
-                >
-
-                  <div
-
-                    className="
-
-                    text-5xl
-
-                    font-bold
-
-                    text-cyan-400
-
-                    "
-
-                  >
-
-                    24/7
-
-                  </div>
-
-
-
-                  <p
-
-                    className="
-
-                    text-slate-400
-
-                    mt-3
-
-                    "
-
-                  >
-
-                    Patient Support
-
-                  </p>
-
-                </div>
+                }
 
               </div>
 
@@ -859,6 +847,8 @@ Explore Treatments
 
 
               <div className="mt-14">
+
+
 
                 <p
 
@@ -886,7 +876,7 @@ Explore Treatments
 
                   flex-wrap
 
-                  gap-4
+                  gap-3
 
                   "
 
@@ -914,11 +904,15 @@ Explore Treatments
 
                         bg-slate-900/50
 
-                        backdrop-blur-2xl
+                        backdrop-blur-xl
+
+                        text-slate-200
 
                         hover:border-blue-500
 
                         transition-all
+
+                        duration-300
 
                         "
 
@@ -942,13 +936,35 @@ Explore Treatments
 
 
 
+
+
             {/* RIGHT SIDE */}
 
-            <div className="relative flex justify-center">
+
+
+            <div
+
+              className="
+
+              relative
+
+              flex
+
+              justify-center
+
+              items-center
+
+              min-h-[600px]
+
+              lg:min-h-[760px]
+
+              "
+
+            >
 
 
 
-              {/* MAIN GLOW */}
+              {/* BACK GLOW */}
 
 
 
@@ -958,15 +974,19 @@ Explore Treatments
 
                 absolute
 
-                w-[600px]
+                w-[450px]
 
-                h-[600px]
+                h-[450px]
+
+                sm:w-[550px]
+
+                sm:h-[550px]
 
                 rounded-full
 
                 bg-blue-500/20
 
-                blur-[170px]
+                blur-[150px]
 
                 "
 
@@ -982,17 +1002,53 @@ Explore Treatments
 
                 top-[20%]
 
-                right-[10%]
+                right-[12%]
 
-                w-[250px]
+                w-[220px]
 
-                h-[250px]
+                h-[220px]
 
                 rounded-full
 
                 bg-cyan-500/20
 
                 blur-[110px]
+
+                "
+
+              />
+
+
+
+
+
+              {/* GLASS CIRCLE */}
+
+
+
+              <div
+
+                className="
+
+                absolute
+
+                w-[320px]
+
+                h-[320px]
+
+                sm:w-[430px]
+
+                sm:h-[430px]
+
+                rounded-full
+
+                border
+
+                border-white/10
+
+                bg-white/[0.03]
+
+                backdrop-blur-3xl
 
                 "
 
@@ -1010,11 +1066,11 @@ Explore Treatments
 
                 src="/images/hero-doctor.png"
 
-                alt="HealWithIndia Doctor"
+                alt="Doctor"
 
-                width={950}
+                width={820}
 
-                height={950}
+                height={820}
 
                 priority
 
@@ -1026,11 +1082,15 @@ Explore Treatments
 
                 object-contain
 
-                scale-[1.12]
+                w-full
 
-                -translate-y-24
+                max-w-[580px]
 
-                drop-shadow-[0_60px_120px_rgba(0,0,0,.85)]
+                lg:max-w-[680px]
+
+                drop-shadow-[0_50px_120px_rgba(0,0,0,.85)]
+
+                animate-[float_6s_ease-in-out_infinite]
 
                 "
 
@@ -1040,8 +1100,7 @@ Explore Treatments
 
 
 
-
-              {/* LEFT FLOATING CARD */}
+              {/* TOP LEFT CARD */}
 
 
 
@@ -1053,31 +1112,33 @@ Explore Treatments
 
                 left-0
 
-                top-20
+                top-10
+
+                sm:left-4
 
                 z-20
 
-                backdrop-blur-2xl
-
-                bg-slate-900/60
+                rounded-[28px]
 
                 border
 
                 border-white/10
 
-                rounded-[28px]
+                bg-slate-900/70
 
-                px-7
+                backdrop-blur-3xl
 
-                py-6
+                px-6
+
+                py-5
 
                 shadow-[0_20px_60px_rgba(0,0,0,.45)]
+
+                animate-[float_7s_ease-in-out_infinite]
 
                 "
 
               >
-
-
 
                 <div className="flex items-center gap-4">
 
@@ -1105,8 +1166,6 @@ Explore Treatments
 
                   >
 
-
-
                     <Building2
 
                       size={26}
@@ -1115,8 +1174,6 @@ Explore Treatments
 
                     />
 
-
-
                   </div>
 
 
@@ -1124,8 +1181,6 @@ Explore Treatments
 
 
                   <div>
-
-
 
                     <p className="text-slate-400 text-sm">
 
@@ -1139,31 +1194,23 @@ Explore Treatments
 
                       className="
 
+                      text-lg
+
                       font-bold
-
-                      text-xl
-
-                      text-white
 
                       "
 
                     >
 
-                      Partner Hospitals
+                      Hospitals
 
                     </h3>
 
-
-
                   </div>
-
-
 
                 </div>
 
               </div>
-
-
 
 
 
@@ -1179,45 +1226,45 @@ Explore Treatments
 
                 absolute
 
-                top-20
+                top-10
 
                 right-0
 
+                sm:right-4
+
                 z-20
 
-                backdrop-blur-2xl
-
-                bg-slate-900/60
+                rounded-[28px]
 
                 border
 
                 border-white/10
 
-                rounded-[28px]
+                bg-slate-900/70
 
-                px-8
+                backdrop-blur-3xl
 
-                py-7
+                px-7
+
+                py-6
 
                 shadow-[0_20px_60px_rgba(0,0,0,.45)]
+
+                animate-[float_8s_ease-in-out_infinite]
 
                 "
 
               >
 
-
-
                 <div
 
                   className="
 
-                  text-6xl
+                  text-5xl
 
                   font-bold
 
                   text-green-400
-
-                  leading-none
 
                   "
 
@@ -1233,25 +1280,19 @@ Explore Treatments
 
                   className="
 
-                  mt-3
-
                   text-slate-300
+
+                  mt-2
 
                   "
 
                 >
 
-                  Average Cost Savings
+                  Cost Savings
 
                 </p>
 
               </div>
-
-
-
-
-
-
 
               {/* BOTTOM LEFT CARD */}
 
@@ -1263,105 +1304,23 @@ Explore Treatments
 
                 absolute
 
-                bottom-10
+                bottom-8
 
-                left-4
+                left-0
+
+                sm:left-6
 
                 z-20
 
-                backdrop-blur-2xl
-
-                bg-slate-900/60
+                rounded-[28px]
 
                 border
 
                 border-white/10
 
-                rounded-[28px]
+                bg-slate-900/70
 
-                px-8
-
-                py-7
-
-                shadow-[0_20px_60px_rgba(0,0,0,.45)]
-
-                "
-
-              >
-
-
-
-                <div
-
-                  className="
-
-                  text-6xl
-
-                  font-bold
-
-                  text-blue-400
-
-                  leading-none
-
-                  "
-
-                >
-
-                  100+
-
-                </div>
-
-
-
-                <p
-
-                  className="
-
-                  mt-3
-
-                  text-slate-300
-
-                  "
-
-                >
-
-                  Countries Served
-
-                </p>
-
-              </div>
-
-
-
-
-
-
-
-              {/* BOTTOM RIGHT CARD */}
-
-
-
-              <div
-
-                className="
-
-                absolute
-
-                bottom-14
-
-                right-0
-
-                z-20
-
-                backdrop-blur-2xl
-
-                bg-slate-900/60
-
-                border
-
-                border-white/10
-
-                rounded-[28px]
+                backdrop-blur-3xl
 
                 px-7
 
@@ -1369,11 +1328,11 @@ Explore Treatments
 
                 shadow-[0_20px_60px_rgba(0,0,0,.45)]
 
+                animate-[float_9s_ease-in-out_infinite]
+
                 "
 
               >
-
-
 
                 <div className="flex items-center gap-4">
 
@@ -1401,9 +1360,7 @@ Explore Treatments
 
                   >
 
-
-
-                    <ShieldCheck
+                    <HeartPulse
 
                       size={26}
 
@@ -1411,17 +1368,115 @@ Explore Treatments
 
                     />
 
-
-
                   </div>
-
-
 
 
 
                   <div>
 
+                    <h3 className="text-2xl font-bold">
 
+                      100+
+
+                    </h3>
+
+
+
+                    <p className="text-slate-400">
+
+                      Countries Served
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+
+
+
+              {/* BOTTOM RIGHT CARD */}
+
+
+
+              <div
+
+                className="
+
+                absolute
+
+                bottom-10
+
+                right-0
+
+                sm:right-6
+
+                z-20
+
+                rounded-[28px]
+
+                border
+
+                border-white/10
+
+                bg-slate-900/70
+
+                backdrop-blur-3xl
+
+                px-7
+
+                py-6
+
+                shadow-[0_20px_60px_rgba(0,0,0,.45)]
+
+                animate-[float_10s_ease-in-out_infinite]
+
+                "
+
+              >
+
+                <div className="flex items-center gap-4">
+
+
+
+                  <div
+
+                    className="
+
+                    h-14
+
+                    w-14
+
+                    rounded-2xl
+
+                    bg-cyan-500/20
+
+                    flex
+
+                    items-center
+
+                    justify-center
+
+                    "
+
+                  >
+
+                    <Stethoscope
+
+                      size={26}
+
+                      className="text-cyan-400"
+
+                    />
+
+                  </div>
+
+
+
+                  <div>
 
                     <h3
 
@@ -1443,15 +1498,11 @@ Explore Treatments
 
                     <p className="text-slate-400">
 
-                      Patient Support
+                      Care Support
 
                     </p>
 
-
-
                   </div>
-
-
 
                 </div>
 
@@ -1473,27 +1524,125 @@ Explore Treatments
 
       </section>
 
+
+
+
+
+
+
       {/* HOSPITAL NETWORK */}
 
-      <section className="relative py-24 bg-black overflow-hidden">
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,.08),transparent_70%)]" />
+
+      <section
+
+        className="
+
+        relative
+
+        py-24
+
+        overflow-hidden
+
+        bg-black
+
+        "
+
+      >
+
+
+
+        <div
+
+          className="
+
+          absolute
+
+          inset-0
+
+          bg-[radial-gradient(circle_at_center,rgba(37,99,235,.08),transparent_70%)]
+
+          "
+
+        />
+
+
+
+
 
         <div className="max-w-7xl mx-auto px-6 relative">
 
+
+
           <div className="text-center">
 
-            <p className="uppercase tracking-[5px] text-blue-400 text-sm font-semibold">
+
+
+            <p
+
+              className="
+
+              uppercase
+
+              tracking-[5px]
+
+              text-blue-400
+
+              text-sm
+
+              font-semibold
+
+              "
+
+            >
 
               Trusted Hospital Network
 
             </p>
 
-            <h2 className="text-5xl lg:text-6xl font-bold mt-6">
+
+
+
+
+            <h2
+
+              className="
+
+              text-4xl
+
+              md:text-5xl
+
+              lg:text-6xl
+
+              font-bold
+
+              mt-6
+
+              "
+
+            >
 
               India's Leading
 
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+
+
+              <span
+
+                className="
+
+                bg-gradient-to-r
+
+                from-blue-400
+
+                to-cyan-400
+
+                bg-clip-text
+
+                text-transparent
+
+                "
+
+              >
 
                 {" "}Healthcare Institutions
 
@@ -1501,17 +1650,45 @@ Explore Treatments
 
             </h2>
 
-            <p className="text-slate-400 text-xl max-w-3xl mx-auto mt-8">
 
-              Collaborating with internationally accredited hospitals
 
-              and experienced specialists to provide
 
-              exceptional medical care.
+
+            <p
+
+              className="
+
+              text-slate-400
+
+              text-lg
+
+              md:text-xl
+
+              max-w-3xl
+
+              mx-auto
+
+              mt-8
+
+              leading-relaxed
+
+              "
+
+            >
+
+              Collaborating with internationally
+
+              accredited hospitals and experienced
+
+              specialists to deliver world-class
+
+              medical care for patients globally.
 
             </p>
 
           </div>
+
+
 
 
 
@@ -1527,7 +1704,7 @@ Explore Treatments
 
             lg:grid-cols-6
 
-            gap-7
+            gap-6
 
             mt-20
 
@@ -1535,9 +1712,27 @@ Explore Treatments
 
           >
 
+
+
             {
 
-              hospitals.map((hospital)=>(
+              [
+
+                "apollo",
+
+                "fortis",
+
+                "medanta",
+
+                "max",
+
+                "manipal",
+
+                "narayana",
+
+              ].map((hospital)=>(
+
+
 
                 <div
 
@@ -1579,31 +1774,33 @@ Explore Treatments
 
                 >
 
+
+
                   <Image
 
                     src={`/images/${hospital}.png`}
 
                     alt={hospital}
 
-                    width={160}
+                    width={140}
 
-                    height={70}
+                    height={60}
 
                     className="
 
                     object-contain
 
-                    max-h-16
+                    w-[120px]
 
-                    w-auto
+                    h-[50px]
 
                     opacity-80
 
                     grayscale
 
-                    group-hover:grayscale-0
-
                     group-hover:opacity-100
+
+                    group-hover:grayscale-0
 
                     transition-all
 
@@ -1613,11 +1810,15 @@ Explore Treatments
 
                   />
 
+
+
                 </div>
 
               ))
 
             }
+
+
 
           </div>
 
@@ -1645,11 +1846,15 @@ Explore Treatments
 
             backdrop-blur-3xl
 
-            p-10
+            p-8
+
+            md:p-10
 
             "
 
           >
+
+
 
             <div
 
@@ -1679,19 +1884,7 @@ Explore Treatments
 
 
 
-                <h3
-
-                  className="
-
-                  text-xl
-
-                  font-semibold
-
-                  mt-5
-
-                  "
-
-                >
+                <h3 className="text-xl font-semibold mt-5">
 
                   Accredited Hospitals
 
@@ -1699,21 +1892,11 @@ Explore Treatments
 
 
 
-                <p
+                <p className="text-slate-400 mt-3">
 
-                  className="
+                  JCI & NABH certified hospitals
 
-                  text-slate-400
-
-                  mt-3
-
-                  "
-
-                >
-
-                  JCI & NABH certified institutions
-
-                  with global standards.
+                  following international standards.
 
                 </p>
 
@@ -1735,19 +1918,7 @@ Explore Treatments
 
 
 
-                <h3
-
-                  className="
-
-                  text-xl
-
-                  font-semibold
-
-                  mt-5
-
-                  "
-
-                >
+                <h3 className="text-xl font-semibold mt-5">
 
                   Global Patients
 
@@ -1755,21 +1926,11 @@ Explore Treatments
 
 
 
-                <p
+                <p className="text-slate-400 mt-3">
 
-                  className="
+                  Trusted by patients from
 
-                  text-slate-400
-
-                  mt-3
-
-                  "
-
-                >
-
-                  Serving patients from
-
-                  more than 100 countries.
+                  over 100 countries worldwide.
 
                 </p>
 
@@ -1791,19 +1952,7 @@ Explore Treatments
 
 
 
-                <h3
-
-                  className="
-
-                  text-xl
-
-                  font-semibold
-
-                  mt-5
-
-                  "
-
-                >
+                <h3 className="text-xl font-semibold mt-5">
 
                   Dedicated Coordinator
 
@@ -1811,21 +1960,11 @@ Explore Treatments
 
 
 
-                <p
+                <p className="text-slate-400 mt-3">
 
-                  className="
+                  Personal support throughout
 
-                  text-slate-400
-
-                  mt-3
-
-                  "
-
-                >
-
-                  Personal assistance
-
-                  throughout your journey.
+                  your treatment journey.
 
                 </p>
 
@@ -1847,19 +1986,7 @@ Explore Treatments
 
 
 
-                <h3
-
-                  className="
-
-                  text-xl
-
-                  font-semibold
-
-                  mt-5
-
-                  "
-
-                >
+                <h3 className="text-xl font-semibold mt-5">
 
                   End-To-End Care
 
@@ -1867,21 +1994,9 @@ Explore Treatments
 
 
 
-                <p
+                <p className="text-slate-400 mt-3">
 
-                  className="
-
-                  text-slate-400
-
-                  mt-3
-
-                  "
-
-                >
-
-                  Consultation,
-
-                  travel assistance,
+                  Consultation, travel,
 
                   treatment and follow-up.
 
@@ -1893,11 +2008,19 @@ Explore Treatments
 
             </div>
 
+
+
           </div>
+
+
 
         </div>
 
+
+
       </section>
+
+
 
     </>
 
