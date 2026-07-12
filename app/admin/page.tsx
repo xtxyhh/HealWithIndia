@@ -18,6 +18,7 @@ import {
   Plus,
   Building2,
   Calendar,
+  ShieldCheck,
 } from "lucide-react";
 
 export default async function AdminPage() {
@@ -246,7 +247,7 @@ export default async function AdminPage() {
 
 
 
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
 
 
 
@@ -311,6 +312,22 @@ export default async function AdminPage() {
               Upload Report
 
             </button>
+
+            <Link
+
+              href="/admin/safety"
+
+              className="bg-red-600 hover:bg-red-700 rounded-2xl p-6 transition flex flex-col items-center justify-center"
+
+            >
+
+              <ShieldCheck className="mx-auto mb-3" />
+
+
+
+              Safety Operations
+
+            </Link>
 
 
 
