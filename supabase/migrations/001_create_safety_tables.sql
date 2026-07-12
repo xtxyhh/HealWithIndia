@@ -88,29 +88,8 @@ ALTER TABLE safety_cases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE safety_case_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journey_safety_checklist ENABLE ROW LEVEL SECURITY;
 
--- Policy: Patients can only view their own safety data via auth mapping
--- Note: These policies will be updated in migration 002 after patient_auth_mapping table is created
-CREATE POLICY "Patients can view own safety profile"
-  ON patient_safety_profiles FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
-
-CREATE POLICY "Patients can view own check-ins"
-  ON safety_check_ins FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
-
-CREATE POLICY "Patients can view own safety cases"
-  ON safety_cases FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
-
-CREATE POLICY "Patients can view own case events"
-  ON safety_case_events FOR SELECT
-  USING (safety_case_id IN (SELECT id FROM safety_cases WHERE patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid())));
-
-CREATE POLICY "Patients can view own checklist"
-  ON journey_safety_checklist FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
-
 -- Policy: Service role (admin) can manage all safety data
+-- Patient-specific policies will be added in migration 002 after patient_auth_mapping table exists
 CREATE POLICY "Service role can manage safety profiles"
   ON patient_safety_profiles FOR ALL
   USING (auth.role() = 'service_role');

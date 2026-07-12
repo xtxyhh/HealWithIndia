@@ -118,6 +118,27 @@ CREATE POLICY "Service role can manage auth mapping"
   ON patient_auth_mapping FOR ALL
   USING (auth.role() = 'service_role');
 
+-- Add patient-specific RLS policies for migration 001 tables (deferred until after patient_auth_mapping exists)
+CREATE POLICY "Patients can view own safety profile"
+  ON patient_safety_profiles FOR SELECT
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can view own check-ins"
+  ON safety_check_ins FOR SELECT
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can view own safety cases"
+  ON safety_cases FOR SELECT
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can view own case events"
+  ON safety_case_events FOR SELECT
+  USING (safety_case_id IN (SELECT id FROM safety_cases WHERE patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid())));
+
+CREATE POLICY "Patients can view own checklist"
+  ON journey_safety_checklist FOR SELECT
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
 -- Function to get coordinator verification status for a patient (by auth user UUID)
 CREATE OR REPLACE FUNCTION get_coordinator_verification_by_auth(auth_user_uuid UUID)
 RETURNS TABLE (
@@ -127,7 +148,10 @@ RETURNS TABLE (
   phone TEXT,
   is_verified BOOLEAN,
   is_active BOOLEAN
-) AS $$
+) LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -145,12 +169,16 @@ BEGIN
     AND oc.is_active = TRUE
   LIMIT 1;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Function to get patient bigint ID from auth user UUID
 CREATE OR REPLACE FUNCTION get_patient_id_from_auth(auth_user_uuid UUID)
-RETURNS BIGINT AS $$
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth_user_uuid LIMIT 1);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
