@@ -378,20 +378,29 @@ export default function SafetyHubPage() {
 
         {/* Emergency Contact */}
         <div className="bg-gradient-to-r from-green-950 to-emerald-950 border border-green-800 rounded-[32px] p-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-2xl font-bold mb-2">Need Immediate Assistance?</h3>
               <p className="text-slate-400">
-                Contact our emergency support line for urgent help during your journey.
+                Contact our emergency support line or submit an urgent help request.
               </p>
             </div>
-            <a
-              href="tel:+919116734675"
-              className="inline-flex items-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 rounded-2xl font-semibold transition"
-            >
-              <Phone size={24} />
-              Emergency Contact
-            </a>
+            <div className="flex items-center gap-4">
+              <a
+                href="tel:+919116734675"
+                className="inline-flex items-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 rounded-2xl font-semibold transition"
+              >
+                <Phone size={24} />
+                Call
+              </a>
+              <a
+                href="/safety/urgent-help"
+                className="inline-flex items-center gap-3 px-6 py-4 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold transition"
+              >
+                <AlertTriangle size={24} />
+                Urgent Help
+              </a>
+            </div>
           </div>
         </div>
       </div>
