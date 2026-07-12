@@ -5,6 +5,7 @@
   import TrustBar from "../components/TrustBar";
   import Hospitals from "../components/Hospitals";
   import PatientJourney from "../components/PatientJourney";
+  import PatientSafety from "../components/PatientSafety";
   import Testimonials from "../components/Testimonials";
   import ConsultationForm from "../components/ConsultationForm";
   import FAQ from "../components/FAQ";
@@ -206,6 +207,8 @@
         <Hospitals />
 
         <PatientJourney />
+
+        <PatientSafety />
 
         <Testimonials />
 

@@ -22,7 +22,7 @@ export default function PatientJourney() {
       step: "04",
       title: "Travel & Visa Support",
       description:
-        "Assistance with medical visa documentation, travel planning and accommodation.",
+        "Assistance with medical visa documentation, travel planning and accommodation with verified coordinator support.",
     },
     {
       step: "05",

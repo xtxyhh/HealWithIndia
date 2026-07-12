@@ -159,6 +159,17 @@ export default function Hospitals() {
 
                 </div>
 
+                <div className="flex items-center gap-3 text-slate-300">
+
+                  <ArrowRight
+                    size={18}
+                    className="text-cyan-400"
+                  />
+
+                  Verified Coordinator Support
+
+                </div>
+
               </div>
 
               <a

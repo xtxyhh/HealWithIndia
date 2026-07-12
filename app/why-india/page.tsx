@@ -58,7 +58,7 @@ const reasons = [
     icon: HeartHandshake,
     title: "End-To-End Support",
     description:
-      "Dedicated patient coordinators throughout your treatment journey.",
+      "Verified care coordinators throughout your treatment journey with secure identity confirmation.",
     color: "text-pink-400",
   },
 ];

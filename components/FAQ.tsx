@@ -50,7 +50,7 @@ export default function FAQ() {
     {
       question: "Will someone assist me after I arrive in India?",
       answer:
-        "Yes. We provide patient coordination support, accommodation guidance, airport assistance and treatment scheduling.",
+        "Yes. We provide patient coordination support, accommodation guidance, airport assistance and treatment scheduling through your verified care coordinator.",
     },
 
     {

@@ -150,7 +150,7 @@ leading hospitals.
 
 "Visa & Travel Assistance",
 
-"Dedicated Patient Coordinator",
+"Verified Care Coordinator",
 
 "Response Within 24 Hours",
 

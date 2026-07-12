@@ -700,7 +700,7 @@ export default function Hero() {
 
                   <span className="text-slate-300">
 
-                    Dedicated Care Coordinator
+                    Verified Care Coordinator
 
                   </span>
 

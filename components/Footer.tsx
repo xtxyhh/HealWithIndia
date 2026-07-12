@@ -131,6 +131,8 @@ const certifications=[
 
 "Secure Data",
 
+"Verified Coordinators",
+
 ];
 
 

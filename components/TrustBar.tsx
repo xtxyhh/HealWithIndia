@@ -100,11 +100,11 @@ iconColor:"text-indigo-400",
 
 icon:UserRound,
 
-title:"Dedicated Patient Coordinator",
+title:"Verified Care Coordinator",
 
 description:
 
-"One personal coordinator manages your entire treatment journey from start to finish.",
+"One verified coordinator manages your entire treatment journey with secure identity confirmation.",
 
 color:"from-green-500/20 to-cyan-500/20",
 
