@@ -97,7 +97,7 @@ CREATE POLICY "Patients can view own fraud reports"
   USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 -- Policy: Patients can create fraud reports via auth mapping
-CREATE POLICY "Patients can create fraud reports"
+CREATE POLICY "Patients can insert own fraud reports"
   ON fraud_reports FOR INSERT
   WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
@@ -123,13 +123,40 @@ CREATE POLICY "Patients can view own safety profile"
   ON patient_safety_profiles FOR SELECT
   USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
+CREATE POLICY "Patients can insert own safety profile"
+  ON patient_safety_profiles FOR INSERT
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can update own safety profile"
+  ON patient_safety_profiles FOR UPDATE
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
 CREATE POLICY "Patients can view own check-ins"
   ON safety_check_ins FOR SELECT
   USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
+CREATE POLICY "Patients can insert own check-ins"
+  ON safety_check_ins FOR INSERT
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can update own check-ins"
+  ON safety_check_ins FOR UPDATE
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
 CREATE POLICY "Patients can view own safety cases"
   ON safety_cases FOR SELECT
   USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can insert own safety cases"
+  ON safety_cases FOR INSERT
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can update own safety cases"
+  ON safety_cases FOR UPDATE
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 CREATE POLICY "Patients can view own case events"
   ON safety_case_events FOR SELECT
@@ -138,6 +165,15 @@ CREATE POLICY "Patients can view own case events"
 CREATE POLICY "Patients can view own checklist"
   ON journey_safety_checklist FOR SELECT
   USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can insert own checklist"
+  ON journey_safety_checklist FOR INSERT
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+
+CREATE POLICY "Patients can update own checklist"
+  ON journey_safety_checklist FOR UPDATE
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
+  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 -- Function to get coordinator verification status for a patient (by auth user UUID)
 CREATE OR REPLACE FUNCTION get_coordinator_verification_by_auth(auth_user_uuid UUID)
