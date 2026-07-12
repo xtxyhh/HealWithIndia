@@ -72,22 +72,19 @@ export default function SafetyHubPage() {
 
       setSafetyProfile(profile);
 
-      // Load check-ins
-      const { data: checkInsData } = await supabase
-        .from("safety_check_ins")
-        .select("*")
-        .eq("patient_id", user.id)
-        .order("created_at", { ascending: false });
+      // Load check-ins via API
+      const checkInsResponse = await fetch(`/api/safety/check-ins?patient_id=${user.id}`);
+      if (checkInsResponse.ok) {
+        const { data: checkInsData } = await checkInsResponse.json();
+        setCheckIns(checkInsData || []);
+      }
 
-      setCheckIns(checkInsData || []);
-
-      // Load checklist
-      const { data: checklistData } = await supabase
-        .from("journey_safety_checklist")
-        .select("*")
-        .eq("patient_id", user.id);
-
-      setChecklist(checklistData || []);
+      // Load checklist via API
+      const checklistResponse = await fetch(`/api/safety/checklist?patient_id=${user.id}`);
+      if (checklistResponse.ok) {
+        const { data: checklistData } = await checklistResponse.json();
+        setChecklist(checklistData || []);
+      }
 
     } catch (err: any) {
       console.error("Error loading safety data:", err);
@@ -137,6 +134,28 @@ export default function SafetyHubPage() {
       follow_up_instructions: "Follow-Up Instructions Received",
     };
     return labels[item] || item;
+  };
+
+  const toggleChecklistItem = async (itemType: string, isCompleted: boolean) => {
+    try {
+      const response = await fetch("/api/safety/checklist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          item_type: itemType,
+          is_completed: isCompleted,
+        }),
+      });
+
+      if (response.ok) {
+        // Reload checklist
+        loadSafetyData();
+      }
+    } catch (err) {
+      console.error("Error updating checklist:", err);
+    }
   };
 
   if (loading) {
@@ -300,12 +319,13 @@ export default function SafetyHubPage() {
           {checklist.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {checklist.map((item) => (
-                <div
+                <button
                   key={item.item_type}
-                  className={`flex items-center gap-3 p-4 rounded-xl border ${
+                  onClick={() => toggleChecklistItem(item.item_type, !item.is_completed)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
                     item.is_completed
-                      ? "bg-green-500/10 border-green-500/30"
-                      : "bg-slate-900/50 border-slate-800"
+                      ? "bg-green-500/10 border-green-500/30 hover:bg-green-500/20"
+                      : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
                   }`}
                 >
                   {item.is_completed ? (
@@ -313,8 +333,8 @@ export default function SafetyHubPage() {
                   ) : (
                     <Clock size={20} className="text-slate-500 flex-shrink-0" />
                   )}
-                  <span className="text-sm">{getChecklistLabel(item.item_type)}</span>
-                </div>
+                  <span className="text-sm text-left">{getChecklistLabel(item.item_type)}</span>
+                </button>
               ))}
             </div>
           ) : (
@@ -326,9 +346,18 @@ export default function SafetyHubPage() {
 
         {/* Recent Check-ins */}
         <div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <ShieldCheck size={24} className="text-cyan-400" />
-            <h2 className="text-2xl font-bold">Recent Safety Check-ins</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={24} className="text-cyan-400" />
+              <h2 className="text-2xl font-bold">Recent Safety Check-ins</h2>
+            </div>
+            <a
+              href="/safety/check-ins"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition text-sm"
+            >
+              New Check-in
+              <ArrowRight size={16} />
+            </a>
           </div>
           
           {checkIns.length > 0 ? (
