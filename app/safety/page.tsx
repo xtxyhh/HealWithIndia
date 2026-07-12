@@ -13,17 +13,24 @@ import {
   Clock,
   FileText,
   ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
 
 interface SafetyProfile {
   journey_stage: string;
-  coordinator_name: string | null;
-  coordinator_reference_id: string | null;
-  coordinator_phone: string | null;
-  coordinator_verified: boolean;
+  coordinator_assignment_id: string | null;
   treatment_destination: string | null;
   hospital_name: string | null;
   estimated_arrival_date: string | null;
+}
+
+interface CoordinatorVerification {
+  coordinator_id: string;
+  reference_id: string;
+  full_name: string;
+  phone: string;
+  is_verified: boolean;
+  is_active: boolean;
 }
 
 interface CheckIn {
@@ -43,6 +50,7 @@ interface ChecklistItem {
 export default function SafetyHubPage() {
   const [loading, setLoading] = useState(true);
   const [safetyProfile, setSafetyProfile] = useState<SafetyProfile | null>(null);
+  const [coordinatorVerification, setCoordinatorVerification] = useState<CoordinatorVerification | null>(null);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +79,13 @@ export default function SafetyHubPage() {
         .single();
 
       setSafetyProfile(profile);
+
+      // Load coordinator verification via API
+      const coordinatorResponse = await fetch(`/api/safety/coordinator?patient_id=${user.id}`);
+      if (coordinatorResponse.ok) {
+        const { data: coordinatorData } = await coordinatorResponse.json();
+        setCoordinatorVerification(coordinatorData);
+      }
 
       // Load check-ins via API
       const checkInsResponse = await fetch(`/api/safety/check-ins?patient_id=${user.id}`);
@@ -262,12 +277,12 @@ export default function SafetyHubPage() {
         )}
 
         {/* Coordinator Information */}
-        {safetyProfile && safetyProfile.coordinator_name ? (
+        {coordinatorVerification && coordinatorVerification.is_verified ? (
           <div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
             <div className="flex items-center gap-3 mb-6">
               <UserRoundCheck size={24} className="text-green-400" />
               <h2 className="text-2xl font-bold">Your Care Coordinator</h2>
-              {safetyProfile.coordinator_verified && (
+              {coordinatorVerification.is_verified && (
                 <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
                   <CheckCircle size={14} />
                   Verified
@@ -278,25 +293,21 @@ export default function SafetyHubPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
                 <p className="text-slate-400 text-sm mb-2">Coordinator Name</p>
-                <p className="text-xl font-semibold">{safetyProfile.coordinator_name}</p>
+                <p className="text-xl font-semibold">{coordinatorVerification.full_name}</p>
               </div>
               
-              {safetyProfile.coordinator_reference_id && (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                  <p className="text-slate-400 text-sm mb-2">Reference ID</p>
-                  <p className="text-xl font-semibold text-blue-400">{safetyProfile.coordinator_reference_id}</p>
-                </div>
-              )}
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <p className="text-slate-400 text-sm mb-2">Official Reference ID</p>
+                <p className="text-xl font-semibold text-blue-400">{coordinatorVerification.reference_id}</p>
+              </div>
               
-              {safetyProfile.coordinator_phone && (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                  <p className="text-slate-400 text-sm mb-2">Contact Number</p>
-                  <p className="text-xl font-semibold flex items-center gap-2">
-                    <Phone size={20} className="text-green-400" />
-                    {safetyProfile.coordinator_phone}
-                  </p>
-                </div>
-              )}
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <p className="text-slate-400 text-sm mb-2">Contact Number</p>
+                <p className="text-xl font-semibold flex items-center gap-2">
+                  <Phone size={20} className="text-green-400" />
+                  {coordinatorVerification.phone}
+                </p>
+              </div>
             </div>
           </div>
         ) : (
@@ -304,10 +315,46 @@ export default function SafetyHubPage() {
             <UserRoundCheck size={48} className="text-slate-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">Coordinator Not Assigned</h3>
             <p className="text-slate-400">
-              Your coordinator information will appear here once assigned.
+              Your verified coordinator information will appear here once assigned by HealWithIndia.
             </p>
           </div>
         )}
+
+        {/* Fraud Protection */}
+        <div className="bg-gradient-to-r from-pink-950 to-red-950 border border-pink-800 rounded-[32px] p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <ShieldAlert size={24} className="text-pink-400" />
+            <h2 className="text-2xl font-bold">Fraud Protection</h2>
+          </div>
+          
+          <div className="mb-6">
+            <p className="text-slate-300 mb-4">
+              HealWithIndia will never ask for payments outside official channels. Verify all coordinator contacts using the official reference ID above.
+            </p>
+            <ul className="space-y-2 text-slate-400 text-sm">
+              <li className="flex items-start gap-2">
+                <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-1" />
+                <span>Only trust contacts with verified reference IDs from this safety hub</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-1" />
+                <span>Report suspicious payment requests or unknown contacts immediately</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-1" />
+                <span>Never share personal or financial information with unverified sources</span>
+              </li>
+            </ul>
+          </div>
+          
+          <a
+            href="/safety/urgent-help"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold transition"
+          >
+            <ShieldAlert size={20} />
+            Report Suspicious Activity
+          </a>
+        </div>
 
         {/* Safety Checklist */}
         <div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">

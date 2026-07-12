@@ -125,27 +125,53 @@ export default function UrgentHelpPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/safety/cases", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          category: selectedCategory,
-          priority: selectedCategoryData?.isEmergency ? "critical" : priority,
-          description: description.trim(),
-        }),
-      });
+      // If this is a fraud report, use the fraud API
+      if (selectedCategory === "suspected_fraud") {
+        const fraudResponse = await fetch("/api/safety/fraud", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            report_type: "other",
+            description: description.trim(),
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          router.push("/patient-login");
+        if (!fraudResponse.ok) {
+          const errorData = await fraudResponse.json();
+          if (fraudResponse.status === 401) {
+            router.push("/patient-login");
+            return;
+          }
+          setError(errorData.error || "Unable to submit your report. Please try again.");
+          setLoading(false);
           return;
         }
-        setError(errorData.error || "Unable to submit your request. Please try again or call emergency services.");
-        setLoading(false);
-        return;
+      } else {
+        // Regular safety case
+        const response = await fetch("/api/safety/cases", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            category: selectedCategory,
+            priority: selectedCategoryData?.isEmergency ? "critical" : priority,
+            description: description.trim(),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          if (response.status === 401) {
+            router.push("/patient-login");
+            return;
+          }
+          setError(errorData.error || "Unable to submit your request. Please try again or call emergency services.");
+          setLoading(false);
+          return;
+        }
       }
 
       setSubmitted(true);
