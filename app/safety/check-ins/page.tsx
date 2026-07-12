@@ -93,7 +93,7 @@ export default function CheckInsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const response = await fetch(`/api/safety/check-ins?patient_id=${user.id}`);
+      const response = await fetch(`/api/safety/check-ins`);
       if (response.ok) {
         const { data } = await response.json();
         setRecentCheckIns(data || []);
