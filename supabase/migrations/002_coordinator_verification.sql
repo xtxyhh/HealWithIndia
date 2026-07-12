@@ -89,17 +89,17 @@ CREATE POLICY "Users can view own auth mapping"
 -- Policy: Patients can view their own coordinator assignment via auth mapping
 CREATE POLICY "Patients can view own coordinator assignment"
   ON coordinator_assignments FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id));
 
 -- Policy: Patients can view their own fraud reports via auth mapping
 CREATE POLICY "Patients can view own fraud reports"
   ON fraud_reports FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id));
 
 -- Policy: Patients can create fraud reports via auth mapping
 CREATE POLICY "Patients can insert own fraud reports"
   ON fraud_reports FOR INSERT
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 -- Policy: Service role (admin) can manage all coordinator data
 CREATE POLICY "Service role can manage official coordinators"
@@ -118,62 +118,91 @@ CREATE POLICY "Service role can manage auth mapping"
   ON patient_auth_mapping FOR ALL
   USING (auth.role() = 'service_role');
 
+-- Helper function to verify patient ownership (bypasses patient_auth_mapping RLS)
+-- SECURITY DEFINER allows function to read patient_auth_mapping without RLS interference
+-- SET search_path = public prevents privilege escalation
+CREATE OR REPLACE FUNCTION verify_patient_ownership(candidate_patient_id BIGINT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.patient_auth_mapping
+    WHERE auth_user_id = auth.uid()
+    AND patient_id = candidate_patient_id
+  );
+END;
+$$;
+
+-- Revoke public execute (only authenticated users and service role should use this)
+REVOKE EXECUTE ON FUNCTION verify_patient_ownership(candidate_patient_id BIGINT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION verify_patient_ownership(candidate_patient_id BIGINT) TO authenticated;
+GRANT EXECUTE ON FUNCTION verify_patient_ownership(candidate_patient_id BIGINT) TO service_role;
+
 -- Add patient-specific RLS policies for migration 001 tables (deferred until after patient_auth_mapping exists)
 CREATE POLICY "Patients can view own safety profile"
   ON patient_safety_profiles FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can insert own safety profile"
   ON patient_safety_profiles FOR INSERT
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can update own safety profile"
   ON patient_safety_profiles FOR UPDATE
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id))
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can view own check-ins"
   ON safety_check_ins FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can insert own check-ins"
   ON safety_check_ins FOR INSERT
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can update own check-ins"
   ON safety_check_ins FOR UPDATE
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id))
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can view own safety cases"
   ON safety_cases FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can insert own safety cases"
   ON safety_cases FOR INSERT
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can update own safety cases"
   ON safety_cases FOR UPDATE
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id))
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can view own case events"
   ON safety_case_events FOR SELECT
-  USING (safety_case_id IN (SELECT id FROM safety_cases WHERE patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid())));
+  USING (EXISTS (
+    SELECT 1
+    FROM safety_cases sc
+    WHERE sc.id = safety_case_events.safety_case_id
+    AND verify_patient_ownership(sc.patient_id)
+  ));
 
 CREATE POLICY "Patients can view own checklist"
   ON journey_safety_checklist FOR SELECT
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can insert own checklist"
   ON journey_safety_checklist FOR INSERT
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 CREATE POLICY "Patients can update own checklist"
   ON journey_safety_checklist FOR UPDATE
-  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()))
-  WITH CHECK (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
+  USING (verify_patient_ownership(patient_id))
+  WITH CHECK (verify_patient_ownership(patient_id));
 
 -- Function to get coordinator verification status for a patient (by auth user UUID)
 CREATE OR REPLACE FUNCTION get_coordinator_verification_by_auth(auth_user_uuid UUID)
