@@ -13,15 +13,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get("patient_id");
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check
-    if (patientId && patientId !== user.id) {
+    if (patientId && patientId !== resolvedPatientId.toString()) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { data, error } = await supabase
       .from("safety_check_ins")
       .select("*")
-      .eq("patient_id", user.id)
+      .eq("patient_id", resolvedPatientId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -73,11 +81,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check
     const { data, error } = await supabase
       .from("safety_check_ins")
       .insert({
-        patient_id: user.id,
+        patient_id: resolvedPatientId,
         check_in_type,
         status,
         notes: notes || null,
@@ -94,7 +110,7 @@ export async function POST(request: NextRequest) {
       const caseResult = await supabase
         .from("safety_cases")
         .insert({
-          patient_id: user.id,
+          patient_id: resolvedPatientId,
           category: "other",
           priority: "high",
           status: "open",

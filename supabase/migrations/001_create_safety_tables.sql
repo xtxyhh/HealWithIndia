@@ -1,6 +1,7 @@
 -- Patient Safety Hub Schema Migration
 -- Version: 001
 -- Description: Core tables for patient safety features, journey tracking, and coordinator verification
+-- IMPORTANT: patients.id is BIGINT (int8), not UUID. All patient_id columns use BIGINT.
 
 -- Enable UUID extension if not exists
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -9,13 +10,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Links to existing patients table, stores safety-specific data
 CREATE TABLE IF NOT EXISTS patient_safety_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  patient_id BIGINT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
   journey_stage TEXT CHECK (journey_stage IN ('initial', 'visa_processing', 'travel_confirmed', 'arrived', 'treatment_in_progress', 'discharged', 'follow_up', 'completed')),
-  coordinator_id UUID,
-  coordinator_name TEXT,
-  coordinator_reference_id TEXT,
-  coordinator_phone TEXT,
-  coordinator_verified BOOLEAN DEFAULT FALSE,
+  coordinator_assignment_id UUID, -- Will be added in migration 002 after coordinator_assignments table exists
   treatment_destination TEXT,
   hospital_name TEXT,
   estimated_arrival_date DATE,
@@ -28,7 +25,7 @@ CREATE TABLE IF NOT EXISTS patient_safety_profiles (
 -- Tracks patient safety status at journey milestones
 CREATE TABLE IF NOT EXISTS safety_check_ins (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  patient_id BIGINT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
   check_in_type TEXT CHECK (check_in_type IN ('arrival_india', 'airport_pickup', 'accommodation_arrival', 'hospital_arrival', 'treatment_milestone', 'discharge', 'return_travel')),
   status TEXT CHECK (status IN ('safe', 'needs_assistance', 'pending')),
   notes TEXT,
@@ -40,7 +37,7 @@ CREATE TABLE IF NOT EXISTS safety_check_ins (
 -- For urgent help and safety incidents
 CREATE TABLE IF NOT EXISTS safety_cases (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  patient_id BIGINT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
   category TEXT CHECK (category IN ('medical_emergency', 'lost_unsafe', 'transport_issue', 'hospital_coordination', 'accommodation_issue', 'suspected_fraud', 'other')),
   priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'critical')) DEFAULT 'medium',
   status TEXT CHECK (status IN ('open', 'acknowledged', 'in_progress', 'resolved', 'closed')) DEFAULT 'open',
@@ -64,7 +61,7 @@ CREATE TABLE IF NOT EXISTS safety_case_events (
 -- Journey safety checklist items
 CREATE TABLE IF NOT EXISTS journey_safety_checklist (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  patient_id BIGINT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
   item_type TEXT CHECK (item_type IN ('passport_visa', 'hospital_confirmed', 'coordinator_verified', 'pickup_confirmed', 'accommodation_confirmed', 'emergency_contacts', 'treatment_documents', 'discharge_plan', 'follow_up_instructions')),
   is_completed BOOLEAN DEFAULT FALSE,
   completed_at TIMESTAMP WITH TIME ZONE,
@@ -91,26 +88,27 @@ ALTER TABLE safety_cases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE safety_case_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journey_safety_checklist ENABLE ROW LEVEL SECURITY;
 
--- Policy: Patients can only view their own safety data
+-- Policy: Patients can only view their own safety data via auth mapping
+-- Note: These policies will be updated in migration 002 after patient_auth_mapping table is created
 CREATE POLICY "Patients can view own safety profile"
   ON patient_safety_profiles FOR SELECT
-  USING (patient_id IN (SELECT id FROM patients WHERE email = auth.email()));
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 CREATE POLICY "Patients can view own check-ins"
   ON safety_check_ins FOR SELECT
-  USING (patient_id IN (SELECT id FROM patients WHERE email = auth.email()));
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 CREATE POLICY "Patients can view own safety cases"
   ON safety_cases FOR SELECT
-  USING (patient_id IN (SELECT id FROM patients WHERE email = auth.email()));
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 CREATE POLICY "Patients can view own case events"
   ON safety_case_events FOR SELECT
-  USING (safety_case_id IN (SELECT id FROM safety_cases WHERE patient_id IN (SELECT id FROM patients WHERE email = auth.email())));
+  USING (safety_case_id IN (SELECT id FROM safety_cases WHERE patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid())));
 
 CREATE POLICY "Patients can view own checklist"
   ON journey_safety_checklist FOR SELECT
-  USING (patient_id IN (SELECT id FROM patients WHERE email = auth.email()));
+  USING (patient_id IN (SELECT patient_id FROM patient_auth_mapping WHERE auth_user_id = auth.uid()));
 
 -- Policy: Service role (admin) can manage all safety data
 CREATE POLICY "Service role can manage safety profiles"

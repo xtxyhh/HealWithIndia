@@ -32,11 +32,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid report type" }, { status: 400 });
     }
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check
     const { data, error } = await supabase
       .from("fraud_reports")
       .insert({
-        patient_id: user.id,
+        patient_id: resolvedPatientId,
         report_type,
         description: description.trim(),
         contact_method: contact_method || null,
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from("safety_cases")
       .insert({
-        patient_id: user.id,
+        patient_id: resolvedPatientId,
         category: "suspected_fraud",
         priority: "high",
         status: "open",

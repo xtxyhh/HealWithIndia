@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const patientId = searchParams.get("patient_id");
-
-    // Server-side ownership check - resolve patient ID from auth mapping
+    // Resolve patient ID from auth mapping
     const { data: resolvedPatientId } = await supabase
       .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
 
@@ -21,26 +18,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
     }
 
-    if (patientId && patientId !== resolvedPatientId.toString()) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    // Use the get_coordinator_verification_by_auth function to get verified coordinator info
     const { data, error } = await supabase
-      .rpc("get_coordinator_verification_by_auth", { auth_user_uuid: user.id });
+      .from("patient_safety_profiles")
+      .select("*")
+      .eq("patient_id", resolvedPatientId)
+      .single();
 
     if (error) {
+      // If no profile exists, return null (not an error)
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ data: null });
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // If no coordinator found, return null
-    if (!data || data.length === 0) {
-      return NextResponse.json({ data: null });
-    }
-
-    return NextResponse.json({ data: data[0] });
+    return NextResponse.json({ data });
   } catch (error) {
-    console.error("Error fetching coordinator verification:", error);
+    console.error("Error fetching safety profile:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

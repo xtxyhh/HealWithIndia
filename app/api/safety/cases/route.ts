@@ -13,15 +13,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get("patient_id");
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check: only allow users to see their own cases
-    if (patientId && patientId !== user.id) {
+    if (patientId && patientId !== resolvedPatientId.toString()) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { data, error } = await supabase
       .from("safety_cases")
       .select("*")
-      .eq("patient_id", user.id)
+      .eq("patient_id", resolvedPatientId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -52,11 +60,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check: ensure patient_id matches authenticated user
     const { data, error } = await supabase
       .from("safety_cases")
       .insert({
-        patient_id: user.id,
+        patient_id: resolvedPatientId,
         category,
         priority: priority || "medium",
         status: "open",

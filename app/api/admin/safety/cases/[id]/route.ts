@@ -9,9 +9,9 @@ async function checkAdminAuth(supabase: any) {
     return { authorized: false, user: null };
   }
 
-  // Check if user is admin via metadata
-  const userMetadata = user.user_metadata;
-  const isAdmin = userMetadata?.role === "admin" || userMetadata?.is_admin === true;
+  // Check if user is admin via trusted app_metadata (not user-editable user_metadata)
+  const appMetadata = user.app_metadata;
+  const isAdmin = appMetadata?.role === "admin" || appMetadata?.role === "super_admin" || appMetadata?.role === "safety_operator";
 
   if (!isAdmin) {
     return { authorized: false, user: null };

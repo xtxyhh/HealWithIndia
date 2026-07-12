@@ -13,15 +13,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get("patient_id");
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check
-    if (patientId && patientId !== user.id) {
+    if (patientId && patientId !== resolvedPatientId.toString()) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { data, error } = await supabase
       .from("journey_safety_checklist")
       .select("*")
-      .eq("patient_id", user.id);
+      .eq("patient_id", resolvedPatientId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -68,11 +76,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid item_type" }, { status: 400 });
     }
 
+    // Resolve patient ID from auth mapping
+    const { data: resolvedPatientId } = await supabase
+      .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
+
+    if (!resolvedPatientId) {
+      return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
+    }
+
     // Server-side ownership check - upsert based on patient_id and item_type
     const { data, error } = await supabase
       .from("journey_safety_checklist")
       .upsert({
-        patient_id: user.id,
+        patient_id: resolvedPatientId,
         item_type,
         is_completed: is_completed !== undefined ? is_completed : true,
         completed_at: is_completed ? new Date().toISOString() : null,

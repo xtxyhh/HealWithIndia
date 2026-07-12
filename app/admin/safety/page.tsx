@@ -23,9 +23,9 @@ export default async function SafetyOperationsPage() {
   }
 
   // Server-side authorization check - only allow authorized admins
-  // In production, this would check user metadata or a role mapping table
-  const userMetadata = user.user_metadata;
-  const isAdmin = userMetadata?.role === "admin" || userMetadata?.is_admin === true;
+  // Use trusted app_metadata (not user-editable user_metadata)
+  const appMetadata = user.app_metadata;
+  const isAdmin = appMetadata?.role === "admin" || appMetadata?.role === "super_admin" || appMetadata?.role === "safety_operator";
 
   if (!isAdmin) {
     return (

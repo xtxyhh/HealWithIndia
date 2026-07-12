@@ -71,31 +71,29 @@ export default function SafetyHubPage() {
         return;
       }
 
-      // Load safety profile
-      const { data: profile } = await supabase
-        .from("patient_safety_profiles")
-        .select("*")
-        .eq("patient_id", user.id)
-        .single();
+      // Load safety profile via API (no patient_id needed - resolved from auth)
+      const profileResponse = await fetch(`/api/safety/profile`);
+      if (profileResponse.ok) {
+        const { data: profileData } = await profileResponse.json();
+        setSafetyProfile(profileData);
+      }
 
-      setSafetyProfile(profile);
-
-      // Load coordinator verification via API
-      const coordinatorResponse = await fetch(`/api/safety/coordinator?patient_id=${user.id}`);
+      // Load coordinator verification via API (no patient_id needed - resolved from auth)
+      const coordinatorResponse = await fetch(`/api/safety/coordinator`);
       if (coordinatorResponse.ok) {
         const { data: coordinatorData } = await coordinatorResponse.json();
         setCoordinatorVerification(coordinatorData);
       }
 
-      // Load check-ins via API
-      const checkInsResponse = await fetch(`/api/safety/check-ins?patient_id=${user.id}`);
+      // Load check-ins via API (no patient_id needed - resolved from auth)
+      const checkInsResponse = await fetch(`/api/safety/check-ins`);
       if (checkInsResponse.ok) {
         const { data: checkInsData } = await checkInsResponse.json();
         setCheckIns(checkInsData || []);
       }
 
-      // Load checklist via API
-      const checklistResponse = await fetch(`/api/safety/checklist?patient_id=${user.id}`);
+      // Load checklist via API (no patient_id needed - resolved from auth)
+      const checklistResponse = await fetch(`/api/safety/checklist`);
       if (checklistResponse.ok) {
         const { data: checklistData } = await checklistResponse.json();
         setChecklist(checklistData || []);
