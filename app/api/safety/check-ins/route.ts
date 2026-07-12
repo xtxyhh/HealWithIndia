@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // If status is "needs_assistance", automatically create a safety case
     if (status === "needs_assistance") {
-      await supabase
+      const caseResult = await supabase
         .from("safety_cases")
         .insert({
           patient_id: user.id,
@@ -100,6 +100,12 @@ export async function POST(request: NextRequest) {
           status: "open",
           description: `Check-in assistance needed: ${check_in_type}. ${notes || ""}`,
         });
+
+      if (caseResult.error) {
+        console.error("Failed to create safety case for assistance request:", caseResult.error);
+        // Return error to surface the failure - don't silently succeed
+        return NextResponse.json({ error: "Check-in succeeded but failed to create safety case for assistance" }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ data }, { status: 201 });

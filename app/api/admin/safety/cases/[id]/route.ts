@@ -127,7 +127,7 @@ export async function PATCH(
           safety_case_id: id,
           event_type: "status_changed",
           description: `Status changed to ${status}`,
-          created_by: user?.email || "admin",
+          created_by: "admin", // Anonymized to prevent email leakage
         });
     }
 
@@ -139,7 +139,7 @@ export async function PATCH(
           safety_case_id: id,
           event_type: "note_added",
           description: `Priority changed to ${priority}`,
-          created_by: user?.email || "admin",
+          created_by: "admin", // Anonymized to prevent email leakage
         });
     }
 
@@ -151,7 +151,7 @@ export async function PATCH(
           safety_case_id: id,
           event_type: "note_added",
           description: notes,
-          created_by: user?.email || "admin",
+          created_by: "admin", // Anonymized to prevent email leakage
         });
     }
 
