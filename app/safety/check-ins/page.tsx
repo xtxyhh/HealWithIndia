@@ -129,7 +129,7 @@ export default function CheckInsPage() {
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 401) {
-          router.push("/patient-login");
+          router.push("/patient/login");
           return;
         }
         setError(errorData.error || "Unable to submit check-in. Please try again.");

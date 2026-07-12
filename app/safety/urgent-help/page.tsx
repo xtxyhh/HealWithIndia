@@ -141,7 +141,7 @@ export default function UrgentHelpPage() {
         if (!fraudResponse.ok) {
           const errorData = await fraudResponse.json();
           if (fraudResponse.status === 401) {
-            router.push("/patient-login");
+            router.push("/patient/login");
             return;
           }
           setError(errorData.error || "Unable to submit your report. Please try again.");
@@ -165,7 +165,7 @@ export default function UrgentHelpPage() {
         if (!response.ok) {
           const errorData = await response.json();
           if (response.status === 401) {
-            router.push("/patient-login");
+            router.push("/patient/login");
             return;
           }
           setError(errorData.error || "Unable to submit your request. Please try again or call emergency services.");
