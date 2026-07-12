@@ -102,6 +102,10 @@ export const RESPONSE_TARGETS = {
     acknowledgement_target_minutes: 15,
     first_response_target_minutes: 30
   },
+  medium: {
+    acknowledgement_target_minutes: 30,
+    first_response_target_minutes: 60
+  },
   elevated: {
     acknowledgement_target_minutes: 30,
     first_response_target_minutes: 60

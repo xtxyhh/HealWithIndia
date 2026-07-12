@@ -47,12 +47,25 @@ interface ChecklistItem {
   completed_at: string | null;
 }
 
+interface RiskAssessment {
+  risk_level: string;
+  explanation: string;
+  evaluated_at: string;
+}
+
+interface RiskData {
+  risk_assessment: RiskAssessment;
+  patient_safe_status: string;
+  recommended_actions: string[];
+}
+
 export default function SafetyHubPage() {
   const [loading, setLoading] = useState(true);
   const [safetyProfile, setSafetyProfile] = useState<SafetyProfile | null>(null);
   const [coordinatorVerification, setCoordinatorVerification] = useState<CoordinatorVerification | null>(null);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [riskData, setRiskData] = useState<RiskData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -97,6 +110,13 @@ export default function SafetyHubPage() {
       if (checklistResponse.ok) {
         const { data: checklistData } = await checklistResponse.json();
         setChecklist(checklistData || []);
+      }
+
+      // Load risk assessment via API (no patient_id needed - resolved from auth)
+      const riskResponse = await fetch(`/api/safety/risk`);
+      if (riskResponse.ok) {
+        const riskData = await riskResponse.json();
+        setRiskData(riskData);
       }
 
     } catch (err: any) {
@@ -271,6 +291,57 @@ export default function SafetyHubPage() {
             <p className="text-slate-400">
               Your safety profile has not been set up yet. Please contact your coordinator.
             </p>
+          </div>
+        )}
+
+        {/* Smart Safety Status */}
+        {riskData && (
+          <div className={`bg-slate-950 border rounded-[32px] p-8 ${
+            riskData.risk_assessment.risk_level === 'critical' ? 'border-red-800' :
+            riskData.risk_assessment.risk_level === 'high' ? 'border-orange-800' :
+            riskData.risk_assessment.risk_level === 'elevated' ? 'border-yellow-800' :
+            riskData.risk_assessment.risk_level === 'watch' ? 'border-blue-800' :
+            'border-green-800'
+          }`}>
+            <div className="flex items-center gap-3 mb-6">
+              <ShieldCheck size={24} className={
+                riskData.risk_assessment.risk_level === 'critical' ? 'text-red-400' :
+                riskData.risk_assessment.risk_level === 'high' ? 'text-orange-400' :
+                riskData.risk_assessment.risk_level === 'elevated' ? 'text-yellow-400' :
+                riskData.risk_assessment.risk_level === 'watch' ? 'text-blue-400' :
+                'text-green-400'
+              } />
+              <h2 className="text-2xl font-bold">Your Journey Safety Status</h2>
+            </div>
+            
+            <div className="mb-6">
+              <p className={`text-2xl font-semibold mb-2 ${
+                riskData.risk_assessment.risk_level === 'critical' ? 'text-red-400' :
+                riskData.risk_assessment.risk_level === 'high' ? 'text-orange-400' :
+                riskData.risk_assessment.risk_level === 'elevated' ? 'text-yellow-400' :
+                riskData.risk_assessment.risk_level === 'watch' ? 'text-blue-400' :
+                'text-green-400'
+              }`}>
+                {riskData.patient_safe_status}
+              </p>
+              <p className="text-slate-400">
+                {riskData.risk_assessment.explanation}
+              </p>
+            </div>
+
+            {riskData.recommended_actions.length > 0 && (
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <p className="text-slate-400 text-sm mb-4 font-semibold">Recommended Actions</p>
+                <ul className="space-y-3">
+                  {riskData.recommended_actions.map((action, index) => (
+                    <li key={index} className="flex items-start gap-3 text-slate-300">
+                      <CheckCircle size={18} className="text-blue-400 mt-0.5 flex-shrink-0" />
+                      <span>{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
