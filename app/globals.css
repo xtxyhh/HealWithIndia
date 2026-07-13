@@ -490,3 +490,17 @@ ease-in-out
 infinite;
 
 }
+
+/* Add this to your globals.css — the Hero component references
+   animate-[float_...] via Tailwind's arbitrary value syntax, which
+   requires this @keyframes to exist somewhere in your stylesheet. */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
