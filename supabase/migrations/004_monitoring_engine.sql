@@ -34,10 +34,10 @@ CREATE TABLE IF NOT EXISTS monitoring_signals (
   metadata JSONB DEFAULT '{}', -- Safe structured metadata (no sensitive data)
   resolved_at TIMESTAMP WITH TIME ZONE,
   resolved_by TEXT,
-  notes TEXT,
-  UNIQUE(patient_id, signal_type, source_entity_id, status) WHERE status = 'active' -- Prevent duplicate active signals
-);
-
+  notes TEXT);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_monitoring_signals_active_unique
+ON public.monitoring_signals (patient_id, signal_type, source_entity_id)
+WHERE status = 'active';
 -- Risk assessments table
 -- Stores patient risk level evaluations with explainable contributing signals
 CREATE TABLE IF NOT EXISTS risk_assessments (
@@ -48,10 +48,12 @@ CREATE TABLE IF NOT EXISTS risk_assessments (
   rule_ids TEXT[] DEFAULT ARRAY[]::TEXT[], -- Array of rule identifiers that triggered
   evaluated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   metadata JSONB DEFAULT '{}', -- Assessment metadata (no sensitive data)
-  is_current BOOLEAN DEFAULT TRUE, -- Whether this is the current active assessment
-  UNIQUE(patient_id, is_current) WHERE is_current = TRUE -- Only one current assessment per patient
+  is_current BOOLEAN DEFAULT TRUE -- Whether this is the current active assessment
+ -- UNIQUE(patient_id, is_current) WHERE is_current = TRUE -- Only one current assessment per patient
 );
-
+CREATE UNIQUE INDEX IF NOT EXISTS idx_risk_assessments_current_unique
+ON public.risk_assessments (patient_id)
+WHERE is_current = TRUE;
 -- Monitoring evaluations table
 -- Records monitoring engine execution runs for audit and debugging
 CREATE TABLE IF NOT EXISTS monitoring_evaluations (
