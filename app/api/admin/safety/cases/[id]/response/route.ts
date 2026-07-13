@@ -155,6 +155,46 @@ export async function POST(
       // Don't fail the response if event creation fails
     }
 
+    // Create monitoring audit event for response action
+    let auditEventType = '';
+    switch (action) {
+      case 'acknowledge':
+        auditEventType = 'case_acknowledged';
+        break;
+      case 'claim':
+        auditEventType = 'case_claimed';
+        break;
+      case 'patient_contacted':
+        auditEventType = 'patient_contact_recorded';
+        break;
+      case 'coordinator_contacted':
+        auditEventType = 'coordinator_contact_recorded';
+        break;
+      case 'resolve':
+        auditEventType = 'case_resolved';
+        break;
+      case 'escalate':
+        auditEventType = 'case_priority_escalated';
+        break;
+      default:
+        auditEventType = 'case_response_state_changed';
+    }
+
+    await supabase.rpc('create_monitoring_audit_event', {
+      p_event_type: auditEventType,
+      p_entity_type: 'safety_case',
+      p_entity_id: caseId,
+      p_patient_id: safetyCase.patient_id,
+      p_actor_type: 'admin',
+      p_actor_id: user.email,
+      p_context: {
+        action: action,
+        response_state: updates.response_state,
+        priority: updates.priority,
+        resolution_category: updates.resolution_category
+      }
+    });
+
     return NextResponse.json({ 
       data: updatedCase,
       message: "Response action recorded successfully"

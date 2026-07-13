@@ -11,6 +11,7 @@ export interface Signal {
   source_entity_id?: string;
   source_entity_type?: string;
   metadata?: Record<string, any>;
+  status?: 'active' | 'resolved' | 'superseded';
 }
 
 export class SignalDetector {

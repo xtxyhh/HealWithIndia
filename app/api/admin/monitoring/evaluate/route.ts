@@ -4,18 +4,77 @@ import { SignalDetector } from "@/lib/monitoring/signalDetector";
 import { RiskAssessor } from "@/lib/monitoring/riskAssessor";
 import { IncidentEscalator } from "@/lib/monitoring/incidentEscalation";
 
+// Use timing-safe comparison for secret validation
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Fail closed if MONITORING_SECRET is not configured
+    const monitoringSecret = process.env.MONITORING_SECRET;
+    if (!monitoringSecret || monitoringSecret.length < 32) {
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    }
+
     // Verify monitoring secret for security
     const authHeader = request.headers.get('authorization');
-    const monitoringSecret = process.env.MONITORING_SECRET;
     
-    if (!authHeader || authHeader !== `Bearer ${monitoringSecret}`) {
+    // Reject missing or malformed authorization header
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const providedSecret = authHeader.substring(7);
+    
+    // Validate secret length before comparison
+    if (!providedSecret || providedSecret.length < 32) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
+    // Use timing-safe comparison to prevent timing attacks
+    if (!timingSafeEqual(providedSecret, monitoringSecret)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Reject secret via query string (security requirement)
+    const { searchParams } = new URL(request.url);
+    if (searchParams.has('secret') || searchParams.has('token') || searchParams.has('key')) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = await createClient();
     const startTime = Date.now();
+
+    // Prevent overlapping evaluations using advisory lock pattern
+    const evaluationId = crypto.randomUUID();
+    const lockKey = `monitoring_evaluation_lock`;
+    const lockTimeout = 10 * 60 * 1000; // 10 minutes
+
+    // Check for recent running evaluation (simple overlap prevention)
+    const { data: recentEvaluations } = await supabase
+      .from("monitoring_evaluations")
+      .select("evaluated_at")
+      .order("evaluated_at", { ascending: false })
+      .limit(1);
+
+    if (recentEvaluations && recentEvaluations.length > 0) {
+      const lastEvalTime = new Date(recentEvaluations[0].evaluated_at).getTime();
+      const timeSinceLastEval = Date.now() - lastEvalTime;
+      
+      // Reject if evaluation ran within last 2 minutes (prevent overlap)
+      if (timeSinceLastEval < 2 * 60 * 1000) {
+        return NextResponse.json({ 
+          error: "Evaluation already in progress",
+          retry_after: Math.ceil((2 * 60 * 1000 - timeSinceLastEval) / 1000)
+        }, { status: 429 });
+      }
+    }
 
     // Fetch all patients with active safety profiles
     const { data: activeProfiles, error: profilesError } = await supabase
@@ -145,7 +204,7 @@ export async function POST(request: NextRequest) {
 
       // Insert new signals
       for (const signal of filteredSignals) {
-        const { error: insertError } = await supabase
+        const { data: insertedSignal, error: insertError } = await supabase
           .from("monitoring_signals")
           .insert({
             patient_id: signal.patient_id,
@@ -156,10 +215,26 @@ export async function POST(request: NextRequest) {
             source_entity_type: signal.source_entity_type,
             metadata: signal.metadata,
             status: 'active'
-          });
+          })
+          .select()
+          .single();
 
-        if (!insertError) {
+        if (!insertError && insertedSignal) {
           signalsDetected++;
+          // Create audit event for signal creation
+          await supabase.rpc('create_monitoring_audit_event', {
+            p_event_type: 'signal_created',
+            p_entity_type: 'monitoring_signal',
+            p_entity_id: insertedSignal.id,
+            p_patient_id: signal.patient_id,
+            p_actor_type: 'monitoring_engine',
+            p_actor_id: evaluationId,
+            p_context: {
+              signal_type: signal.signal_type,
+              severity: signal.severity,
+              source: signal.source
+            }
+          });
         }
       }
 
@@ -183,6 +258,19 @@ export async function POST(request: NextRequest) {
           if (!updateError) {
             signalsResolved++;
             resolvedSignalIds.push(existingSignal.id);
+            // Create audit event for signal resolution
+            await supabase.rpc('create_monitoring_audit_event', {
+              p_event_type: 'signal_resolved',
+              p_entity_type: 'monitoring_signal',
+              p_entity_id: existingSignal.id,
+              p_patient_id: patientId,
+              p_actor_type: 'monitoring_engine',
+              p_actor_id: evaluationId,
+              p_context: {
+                signal_type: existingSignal.signal_type,
+                reason: 'no_longer_active'
+              }
+            });
           }
         }
       }
@@ -209,7 +297,7 @@ export async function POST(request: NextRequest) {
           .eq("is_current", true);
 
         // Insert new assessment
-        const { error: riskError } = await supabase
+        const { data: insertedAssessment, error: riskError } = await supabase
           .from("risk_assessments")
           .insert({
             patient_id: riskAssessment.patient_id,
@@ -218,10 +306,25 @@ export async function POST(request: NextRequest) {
             rule_ids: riskAssessment.rule_ids,
             evaluated_at: riskAssessment.evaluated_at.toISOString(),
             is_current: true
-          });
+          })
+          .select()
+          .single();
 
-        if (!riskError) {
+        if (!riskError && insertedAssessment) {
           riskAssessmentsUpdated++;
+          // Create audit event for risk assessment creation
+          await supabase.rpc('create_monitoring_audit_event', {
+            p_event_type: 'risk_assessment_created',
+            p_entity_type: 'risk_assessment',
+            p_entity_id: insertedAssessment.id,
+            p_patient_id: patientId,
+            p_actor_type: 'monitoring_engine',
+            p_actor_id: evaluationId,
+            p_context: {
+              risk_level: riskAssessment.risk_level,
+              contributing_signals_count: riskAssessment.contributing_signal_ids.length
+            }
+          });
         }
       }
 
@@ -240,7 +343,7 @@ export async function POST(request: NextRequest) {
             action.category || '',
             safetyCases || []
           )) {
-            const { error: createError } = await supabase
+            const { data: insertedCase, error: createError } = await supabase
               .from("safety_cases")
               .insert({
                 patient_id: action.patient_id,
@@ -249,10 +352,26 @@ export async function POST(request: NextRequest) {
                 status: 'open',
                 description: action.description,
                 response_state: 'detected'
-              });
+              })
+              .select()
+              .single();
 
-            if (!createError) {
+            if (!createError && insertedCase) {
               casesCreated++;
+              // Create audit event for automatic case creation
+              await supabase.rpc('create_monitoring_audit_event', {
+                p_event_type: 'case_auto_created',
+                p_entity_type: 'safety_case',
+                p_entity_id: insertedCase.id,
+                p_patient_id: action.patient_id,
+                p_actor_type: 'monitoring_engine',
+                p_actor_id: evaluationId,
+                p_context: {
+                  category: action.category,
+                  priority: action.priority,
+                  description: action.description
+                }
+              });
             }
           }
         } else if (action.action_type === 'escalate_priority' && action.case_id) {
@@ -263,6 +382,19 @@ export async function POST(request: NextRequest) {
 
           if (!escalateError) {
             casesEscalated++;
+            // Create audit event for case priority escalation
+            await supabase.rpc('create_monitoring_audit_event', {
+              p_event_type: 'case_auto_escalated',
+              p_entity_type: 'safety_case',
+              p_entity_id: action.case_id,
+              p_patient_id: patientId,
+              p_actor_type: 'monitoring_engine',
+              p_actor_id: evaluationId,
+              p_context: {
+                new_priority: action.priority,
+                previous_priority: action.metadata?.previous_priority
+              }
+            });
           }
         }
       }
@@ -270,7 +402,26 @@ export async function POST(request: NextRequest) {
 
     const executionDuration = Date.now() - startTime;
 
-    // Record evaluation
+    // Create audit event for evaluation completion
+    await supabase.rpc('create_monitoring_audit_event', {
+      p_event_type: 'evaluation_completed',
+      p_entity_type: 'monitoring_evaluation',
+      p_entity_id: null,
+      p_patient_id: null,
+      p_actor_type: 'monitoring_engine',
+      p_actor_id: evaluationId,
+      p_context: {
+        signals_detected: signalsDetected,
+        signals_resolved: signalsResolved,
+        risk_assessments_updated: riskAssessmentsUpdated,
+        cases_created: casesCreated,
+        cases_escalated: casesEscalated,
+        execution_duration_ms: executionDuration,
+        active_profiles_count: activeProfiles?.length || 0
+      }
+    });
+
+    // Record evaluation with evaluation ID for audit traceability
     await supabase
       .from("monitoring_evaluations")
       .insert({
@@ -281,11 +432,16 @@ export async function POST(request: NextRequest) {
         cases_created: casesCreated,
         cases_escalated: casesEscalated,
         execution_duration_ms: executionDuration,
-        triggered_by: 'scheduled'
+        triggered_by: 'scheduled',
+        metadata: {
+          evaluation_id: evaluationId,
+          active_profiles_count: activeProfiles?.length || 0
+        }
       });
 
     return NextResponse.json({
       success: true,
+      evaluation_id: evaluationId,
       signals_detected: signalsDetected,
       signals_resolved: signalsResolved,
       risk_assessments_updated: riskAssessmentsUpdated,
@@ -294,7 +450,8 @@ export async function POST(request: NextRequest) {
       execution_duration_ms: executionDuration
     });
   } catch (error) {
-    console.error("Monitoring evaluation error:", error);
+    // Log error without exposing sensitive details
+    console.error("Monitoring evaluation error:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

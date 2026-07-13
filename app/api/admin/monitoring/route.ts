@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 
+const MAX_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 20;
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -18,22 +21,51 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Fetch active monitoring signals
-    const { data: activeSignals, error: signalsError } = await supabase
+    const { searchParams } = new URL(request.url);
+    
+    // Validate and parse pagination parameters
+    const pageParam = searchParams.get('page');
+    const pageSizeParam = searchParams.get('page_size');
+    
+    let page = 1;
+    let pageSize = DEFAULT_PAGE_SIZE;
+
+    if (pageParam) {
+      const parsedPage = parseInt(pageParam, 10);
+      if (isNaN(parsedPage) || parsedPage < 1) {
+        return NextResponse.json({ error: "Invalid page parameter" }, { status: 400 });
+      }
+      page = parsedPage;
+    }
+
+    if (pageSizeParam) {
+      const parsedPageSize = parseInt(pageSizeParam, 10);
+      if (isNaN(parsedPageSize) || parsedPageSize < 1 || parsedPageSize > MAX_PAGE_SIZE) {
+        return NextResponse.json({ error: `page_size must be between 1 and ${MAX_PAGE_SIZE}` }, { status: 400 });
+      }
+      pageSize = parsedPageSize;
+    }
+
+    const offset = (page - 1) * pageSize;
+
+    // Fetch active monitoring signals with pagination
+    const { data: activeSignals, error: signalsError, count: signalsCount } = await supabase
       .from("monitoring_signals")
-      .select("*")
+      .select("*", { count: 'exact' })
       .eq("status", "active")
-      .order("detected_at", { ascending: false });
+      .order("detected_at", { ascending: false })
+      .range(offset, offset + pageSize - 1);
 
-    // Fetch current risk assessments
-    const { data: riskAssessments, error: riskError } = await supabase
+    // Fetch current risk assessments with pagination
+    const { data: riskAssessments, error: riskError, count: riskCount } = await supabase
       .from("risk_assessments")
-      .select("*")
+      .select("*", { count: 'exact' })
       .eq("is_current", true)
-      .order("evaluated_at", { ascending: false });
+      .order("evaluated_at", { ascending: false })
+      .range(offset, offset + pageSize - 1);
 
-    // Fetch safety cases with patient info for incident queue
-    const { data: safetyCases, error: casesError } = await supabase
+    // Fetch safety cases with patient info for incident queue with pagination
+    const { data: safetyCases, error: casesError, count: casesCount } = await supabase
       .from("safety_cases")
       .select(`
         id,
@@ -53,11 +85,11 @@ export async function GET(request: NextRequest) {
         patient_safety_profiles (
           journey_stage
         )
-      `)
+      `, { count: 'exact' })
       .order("created_at", { ascending: false })
-      .limit(100);
+      .range(offset, offset + pageSize - 1);
 
-    // Fetch recent monitoring evaluations
+    // Fetch recent monitoring evaluations (limited, no pagination needed)
     const { data: evaluations, error: evalError } = await supabase
       .from("monitoring_evaluations")
       .select("*")
@@ -108,6 +140,16 @@ export async function GET(request: NextRequest) {
         unacknowledged_incidents: unacknowledgedCases.length,
         overdue_check_ins: overdueCheckIns,
         response_delays: responseDelays
+      },
+      pagination: {
+        page,
+        page_size: pageSize,
+        total_signals: signalsCount || 0,
+        total_risk_assessments: riskCount || 0,
+        total_cases: casesCount || 0,
+        has_more_signals: (signalsCount || 0) > offset + pageSize,
+        has_more_risk_assessments: (riskCount || 0) > offset + pageSize,
+        has_more_cases: (casesCount || 0) > offset + pageSize
       },
       signals: activeSignals || [],
       risk_assessments: riskAssessments || [],

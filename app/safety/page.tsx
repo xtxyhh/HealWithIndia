@@ -47,16 +47,12 @@ interface ChecklistItem {
   completed_at: string | null;
 }
 
-interface RiskAssessment {
-  risk_level: string;
-  explanation: string;
-  evaluated_at: string;
-}
-
 interface RiskData {
-  risk_assessment: RiskAssessment;
+  risk_level: string;
   patient_safe_status: string;
+  explanation: string;
   recommended_actions: string[];
+  evaluated_at: string;
 }
 
 export default function SafetyHubPage() {
@@ -297,18 +293,18 @@ export default function SafetyHubPage() {
         {/* Smart Safety Status */}
         {riskData && (
           <div className={`bg-slate-950 border rounded-[32px] p-8 ${
-            riskData.risk_assessment.risk_level === 'critical' ? 'border-red-800' :
-            riskData.risk_assessment.risk_level === 'high' ? 'border-orange-800' :
-            riskData.risk_assessment.risk_level === 'elevated' ? 'border-yellow-800' :
-            riskData.risk_assessment.risk_level === 'watch' ? 'border-blue-800' :
+            riskData.risk_level === 'critical' ? 'border-red-800' :
+            riskData.risk_level === 'high' ? 'border-orange-800' :
+            riskData.risk_level === 'elevated' ? 'border-yellow-800' :
+            riskData.risk_level === 'watch' ? 'border-blue-800' :
             'border-green-800'
           }`}>
             <div className="flex items-center gap-3 mb-6">
               <ShieldCheck size={24} className={
-                riskData.risk_assessment.risk_level === 'critical' ? 'text-red-400' :
-                riskData.risk_assessment.risk_level === 'high' ? 'text-orange-400' :
-                riskData.risk_assessment.risk_level === 'elevated' ? 'text-yellow-400' :
-                riskData.risk_assessment.risk_level === 'watch' ? 'text-blue-400' :
+                riskData.risk_level === 'critical' ? 'text-red-400' :
+                riskData.risk_level === 'high' ? 'text-orange-400' :
+                riskData.risk_level === 'elevated' ? 'text-yellow-400' :
+                riskData.risk_level === 'watch' ? 'text-blue-400' :
                 'text-green-400'
               } />
               <h2 className="text-2xl font-bold">Your Journey Safety Status</h2>
@@ -316,20 +312,20 @@ export default function SafetyHubPage() {
             
             <div className="mb-6">
               <p className={`text-2xl font-semibold mb-2 ${
-                riskData.risk_assessment.risk_level === 'critical' ? 'text-red-400' :
-                riskData.risk_assessment.risk_level === 'high' ? 'text-orange-400' :
-                riskData.risk_assessment.risk_level === 'elevated' ? 'text-yellow-400' :
-                riskData.risk_assessment.risk_level === 'watch' ? 'text-blue-400' :
+                riskData.risk_level === 'critical' ? 'text-red-400' :
+                riskData.risk_level === 'high' ? 'text-orange-400' :
+                riskData.risk_level === 'elevated' ? 'text-yellow-400' :
+                riskData.risk_level === 'watch' ? 'text-blue-400' :
                 'text-green-400'
               }`}>
                 {riskData.patient_safe_status}
               </p>
               <p className="text-slate-400">
-                {riskData.risk_assessment.explanation}
+                {riskData.explanation}
               </p>
             </div>
 
-            {riskData.recommended_actions.length > 0 && (
+            {riskData.recommended_actions && riskData.recommended_actions.length > 0 && (
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
                 <p className="text-slate-400 text-sm mb-4 font-semibold">Recommended Actions</p>
                 <ul className="space-y-3">
