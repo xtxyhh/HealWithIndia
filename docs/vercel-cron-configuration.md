@@ -2,11 +2,12 @@
 
 ## Architecture Decision
 
-**Chosen Architecture:** Vercel Cron Jobs with Bearer Token Authentication
+**Chosen Architecture:** Vercel Cron Jobs with Native CRON_SECRET Authentication
 
 **Rationale:**
 - Vercel Cron is the native scheduling solution for Vercel deployments
-- Endpoint already designed for Bearer token authentication via MONITORING_SECRET
+- Vercel automatically sends Authorization: Bearer <CRON_SECRET> when CRON_SECRET is configured
+- Endpoint validates CRON_SECRET using timing-safe comparison
 - No external dependencies required
 - Simple to configure and monitor
 
@@ -19,25 +20,30 @@
   "crons": [
     {
       "path": "/api/admin/monitoring/evaluate",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
 ```
 
-**Schedule:** Every 30 minutes
+**Schedule:** Daily at midnight (0 0 * * *)
 
-**Rationale for 30-minute interval:**
-- Balances responsiveness with resource usage
-- Allows sufficient time for monitoring evaluation to complete
-- Prevents overlapping executions (2-minute overlap protection in endpoint)
-- Appropriate for medical tourism safety monitoring (not real-time emergency response)
+**Rationale for Daily Schedule:**
+- Compatible with Vercel Hobby plan (Hobby cron schedules can run only once per day)
+- Provides baseline monitoring for medical tourism safety
+- Production-grade proactive monitoring should use more frequent schedules only on plans that support it (Pro or above)
+
+**For Production-Grade Monitoring:**
+On Vercel Pro plan or above, consider:
+- `*/30 * * * *` (every 30 minutes) - recommended for proactive safety monitoring
+- `0 * * * *` (every hour) - moderate frequency
+- `*/15 * * * *` (every 15 minutes) - high-frequency monitoring
 
 ## Authentication
 
-**Method:** Bearer Token in Authorization Header
+**Method:** Bearer Token in Authorization Header (Vercel Cron Native)
 
-**Environment Variable:** `MONITORING_SECRET`
+**Environment Variable:** `CRON_SECRET`
 
 **Required:** Yes (endpoint fails closed if missing)
 
@@ -50,30 +56,46 @@ openssl rand -base64 32
 
 ## Vercel Cron Authorization Behavior
 
-**Vercel Cron does NOT automatically add Authorization headers.**
+**Vercel Cron automatically sends Authorization: Bearer <CRON_SECRET> when CRON_SECRET is configured in the Vercel project.**
 
-The endpoint must be configured to accept:
-- Authorization: Bearer <MONITORING_SECRET>
-
-Vercel Cron invokes the endpoint as a standard HTTP request without special headers. The authentication is handled by the endpoint itself validating the Bearer token.
+The endpoint is configured to:
+- Accept Authorization: Bearer <CRON_SECRET>
+- Validate CRON_SECRET using timing-safe comparison
+- Reject secrets via query string (security requirement)
+- Fail closed if CRON_SECRET is missing or too short
 
 ## Deployment Plan Compatibility
 
 **Vercel Plan Requirements:**
-- Cron Jobs available on Pro plan and above
-- Free plan does NOT support Cron Jobs
+- **Hobby plan:** Cron schedules can run only once per day
+- **Pro plan and above:** Supports more frequent cron schedules
 
-**If using Free Plan:**
+**Current Configuration:** Daily schedule (0 0 * * *) - compatible with all plans including Hobby
+
+**If using Free Plan (no cron support):**
 - Use external cron service (cron-job.org, EasyCron, etc.)
 - Configure external service to call:
   ```bash
   curl -X POST https://your-domain.com/api/admin/monitoring/evaluate \
-    -H "Authorization: Bearer YOUR_MONITORING_SECRET"
+    -H "Authorization: Bearer YOUR_CRON_SECRET"
   ```
 
 ## Alternative Configurations
 
-### Higher Frequency (Critical Operations)
+### Pro Plan - Recommended for Production
+```json
+{
+  "crons": [{
+    "path": "/api/admin/monitoring/evaluate",
+    "schedule": "*/30 * * * *"
+  }]
+}
+```
+**Use Case:** Production-grade proactive safety monitoring
+**Requirement:** Vercel Pro plan or above
+**Consideration:** Balances responsiveness with resource usage
+
+### High Frequency (Critical Operations)
 ```json
 {
   "crons": [{
@@ -83,19 +105,8 @@ Vercel Cron invokes the endpoint as a standard HTTP request without special head
 }
 ```
 **Use Case:** If real-time monitoring is required
+**Requirement:** Vercel Pro plan or above
 **Consideration:** Increases resource usage, may require overlap protection adjustment
-
-### Lower Frequency (Resource Optimization)
-```json
-{
-  "crons": [{
-    "path": "/api/admin/monitoring/evaluate",
-    "schedule": "0 * * * *"
-  }]
-}
-```
-**Use Case:** If monitoring frequency can be hourly
-**Consideration:** Delayed detection of safety signals
 
 ## Monitoring and Alerting
 
@@ -113,13 +124,13 @@ Vercel Cron invokes the endpoint as a standard HTTP request without special head
 ## Security Considerations
 
 **Never:**
-- Add MONITORING_SECRET to vercel.json
+- Add CRON_SECRET to vercel.json
 - Log the secret in endpoint
 - Accept secret via query string
 - Use weak or predictable secrets
 
 **Always:**
-- Store MONITORING_SECRET in environment variables
+- Store CRON_SECRET in Vercel project environment variables
 - Rotate secret periodically
 - Use HTTPS only
 - Monitor for unusual evaluation patterns
@@ -129,14 +140,15 @@ Vercel Cron invokes the endpoint as a standard HTTP request without special head
 **Local Testing:**
 ```bash
 curl -X POST http://localhost:3000/api/admin/monitoring/evaluate \
-  -H "Authorization: Bearer YOUR_LOCAL_MONITORING_SECRET"
+  -H "Authorization: Bearer YOUR_LOCAL_CRON_SECRET"
 ```
 
 **Production Testing:**
-1. Deploy with vercel.json
-2. Monitor Vercel Cron logs
-3. Verify monitoring_evaluations table receives records
-4. Check execution duration metrics
+1. Set CRON_SECRET in Vercel project environment variables
+2. Deploy with vercel.json
+3. Monitor Vercel Cron logs
+4. Verify monitoring_evaluations table receives records
+5. Check execution duration metrics
 
 ## Rollback Plan
 

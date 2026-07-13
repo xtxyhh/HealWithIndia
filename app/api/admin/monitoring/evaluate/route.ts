@@ -16,13 +16,13 @@ function timingSafeEqual(a: string, b: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    // Fail closed if MONITORING_SECRET is not configured
-    const monitoringSecret = process.env.MONITORING_SECRET;
-    if (!monitoringSecret || monitoringSecret.length < 32) {
+    // Fail closed if CRON_SECRET is not configured (Vercel Cron native authentication)
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || cronSecret.length < 32) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    // Verify monitoring secret for security
+    // Verify Vercel Cron CRON_SECRET for security
     const authHeader = request.headers.get('authorization');
     
     // Reject missing or malformed authorization header
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Use timing-safe comparison to prevent timing attacks
-    if (!timingSafeEqual(providedSecret, monitoringSecret)) {
+    if (!timingSafeEqual(providedSecret, cronSecret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
