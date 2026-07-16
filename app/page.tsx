@@ -6,6 +6,7 @@
   import Hospitals from "../components/Hospitals";
   import PatientJourney from "../components/PatientJourney";
   import PatientSafety from "../components/PatientSafety";
+  import SmartTouristProtection from "../components/SmartTouristProtection";
   import Testimonials from "../components/Testimonials";
   import ConsultationForm from "../components/ConsultationForm";
   import FAQ from "../components/FAQ";
@@ -24,6 +25,8 @@
         <Hero />
 
         <Stats />
+
+        <SmartTouristProtection />
 
         <TrustBar />
 

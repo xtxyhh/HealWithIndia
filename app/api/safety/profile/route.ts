@@ -10,6 +10,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Verify patient portal access is enabled
+    const { data: hasAccess, error: accessError } = await supabase
+      .rpc("verify_patient_portal_access");
+
+    if (accessError) {
+      console.error("Error verifying portal access:", accessError);
+      return NextResponse.json({ error: accessError.message }, { status: 500 });
+    }
+
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: "Patient portal access has not been enabled for this account. Please contact your HealWithIndia coordinator." 
+      }, { status: 403 });
+    }
+
     // Resolve patient ID from auth mapping
     const { data: resolvedPatientId } = await supabase
       .rpc("get_patient_id_from_auth", { auth_user_uuid: user.id });
@@ -18,6 +33,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Patient mapping not found" }, { status: 404 });
     }
 
+    // Get safety profile (no lazy initialization - protection must be activated by admin)
     const { data, error } = await supabase
       .from("patient_safety_profiles")
       .select("*")
@@ -25,9 +41,12 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      // If no profile exists, return null (not an error)
+      // If no profile exists, return null (protection not activated)
       if (error.code === 'PGRST116') {
-        return NextResponse.json({ data: null });
+        return NextResponse.json({ 
+          data: null,
+          protection_status: "NOT_ACTIVATED"
+        });
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

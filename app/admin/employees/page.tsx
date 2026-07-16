@@ -14,7 +14,17 @@ Phone,
 
 Shield,
 
+ShieldCheck,
+
+Lock,
+
+Unlock,
+
+CheckCircle,
+
 } from "lucide-react";
+
+import StaffPortalControls from "./StaffPortalControls";
 
 export default async function EmployeesPage(){
 
@@ -273,6 +283,14 @@ employee.name?.charAt(0)
 </span>
 
 </div>
+
+<StaffPortalControls
+  staffId={employee.id}
+  staffEmail={employee.email}
+  currentRole={employee.role}
+  portalStatus={employee.portal_status}
+  authUserId={employee.auth_user_id}
+/>
 
 </div>
 

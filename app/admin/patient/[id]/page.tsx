@@ -13,10 +13,14 @@ Edit,
 BadgeCheck,
 Building2,
 FileText,
+ShieldCheck,
+UserPlus,
+Lock,
 
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabaseServer";
+import PatientControls from "./PatientControls";
 
 
 
@@ -28,13 +32,15 @@ params,
 
 }:{
 
-params:{id:string}
+params:Promise<{id:string}>
 
 }){
 
 
 
 
+
+const { id } = await params;
 
 const supabase=await createClient();
 
@@ -56,11 +62,25 @@ data:patient,
 
 "id",
 
-params.id
+parseInt(id)
 
 )
 
 .single();
+
+// Fetch portal access status
+const { data: portalAccess } = await supabase
+  .from("patient_auth_mapping")
+  .select("*")
+  .eq("patient_id", parseInt(id))
+  .single();
+
+// Fetch protection status
+const { data: protectionStatus } = await supabase
+  .from("patient_safety_profiles")
+  .select("*")
+  .eq("patient_id", parseInt(id))
+  .single();
 
 
 
@@ -1591,6 +1611,16 @@ patient.notes
 <div className="space-y-8">
 
 
+
+
+
+{/* PATIENT CONTROLS */}
+<PatientControls 
+  patientId={id}
+  patientEmail={patient.email}
+  portalAccess={portalAccess}
+  protectionStatus={protectionStatus}
+/>
 
 
 

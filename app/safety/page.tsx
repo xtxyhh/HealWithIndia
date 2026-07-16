@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import ProtectionStatus from "@/components/ProtectionStatus";
+import AccountMenu from "@/components/AccountMenu";
 import {
   ShieldCheck,
   UserRoundCheck,
@@ -14,7 +16,16 @@ import {
   FileText,
   ArrowRight,
   ShieldAlert,
+  Activity,
 } from "lucide-react";
+import {
+  mapCheckInToTimeline,
+  mapCaseToTimeline,
+  mapChecklistToTimeline,
+  mapCoordinatorToTimeline,
+  sortTimelineByTimestamp,
+  getTimelineStatusColorClasses,
+} from "@/lib/safety/protection-timeline";
 
 interface SafetyProfile {
   journey_stage: string;
@@ -55,6 +66,15 @@ interface RiskData {
   evaluated_at: string;
 }
 
+interface ProtectionStatusData {
+  protectionStatus: any;
+  latestCheckIn: any;
+  checklistProgress: any;
+  coordinatorStatus: any;
+  activeAssistance: any;
+  recommendation: any;
+}
+
 export default function SafetyHubPage() {
   const [loading, setLoading] = useState(true);
   const [safetyProfile, setSafetyProfile] = useState<SafetyProfile | null>(null);
@@ -62,6 +82,7 @@ export default function SafetyHubPage() {
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [riskData, setRiskData] = useState<RiskData | null>(null);
+  const [protectionStatusData, setProtectionStatusData] = useState<ProtectionStatusData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,8 +104,19 @@ export default function SafetyHubPage() {
       // Load safety profile via API (no patient_id needed - resolved from auth)
       const profileResponse = await fetch(`/api/safety/profile`);
       if (profileResponse.ok) {
-        const { data: profileData } = await profileResponse.json();
-        setSafetyProfile(profileData);
+        const profileData = await profileResponse.json();
+        setSafetyProfile(profileData.data);
+        
+        // If protection is not activated, don't load checklist data
+        if (profileData.protection_status === 'NOT_ACTIVATED') {
+          setChecklist([]);
+        }
+      } else {
+        const errorData = await profileResponse.json();
+        if (errorData.protection_status === 'NOT_ACTIVATED') {
+          setSafetyProfile(null);
+          setChecklist([]);
+        }
       }
 
       // Load coordinator verification via API (no patient_id needed - resolved from auth)
@@ -102,10 +134,13 @@ export default function SafetyHubPage() {
       }
 
       // Load checklist via API (no patient_id needed - resolved from auth)
-      const checklistResponse = await fetch(`/api/safety/checklist`);
-      if (checklistResponse.ok) {
-        const { data: checklistData } = await checklistResponse.json();
-        setChecklist(checklistData || []);
+      // Only load if protection is activated
+      if (safetyProfile) {
+        const checklistResponse = await fetch(`/api/safety/checklist`);
+        if (checklistResponse.ok) {
+          const { data: checklistData } = await checklistResponse.json();
+          setChecklist(checklistData || []);
+        }
       }
 
       // Load risk assessment via API (no patient_id needed - resolved from auth)
@@ -113,6 +148,13 @@ export default function SafetyHubPage() {
       if (riskResponse.ok) {
         const riskData = await riskResponse.json();
         setRiskData(riskData);
+      }
+
+      // Load unified protection status via API
+      const protectionStatusResponse = await fetch(`/api/safety/protection-status`);
+      if (protectionStatusResponse.ok) {
+        const protectionData = await protectionStatusResponse.json();
+        setProtectionStatusData(protectionData);
       }
 
     } catch (err: any) {
@@ -167,6 +209,7 @@ export default function SafetyHubPage() {
 
   const toggleChecklistItem = async (itemType: string, isCompleted: boolean) => {
     try {
+      setError(null);
       const response = await fetch("/api/safety/checklist", {
         method: "POST",
         headers: {
@@ -179,11 +222,19 @@ export default function SafetyHubPage() {
       });
 
       if (response.ok) {
-        // Reload checklist
-        loadSafetyData();
+        // Reload checklist to refresh state
+        await loadSafetyData();
+      } else {
+        const errorData = await response.json();
+        setError(`Failed to update checklist: ${errorData.error || 'Please try again'}`);
+        // Revert UI state by reloading data
+        await loadSafetyData();
       }
     } catch (err) {
       console.error("Error updating checklist:", err);
+      setError("Unable to update checklist. Please check your connection and try again.");
+      // Revert UI state by reloading data
+      await loadSafetyData();
     }
   };
 
@@ -225,20 +276,100 @@ export default function SafetyHubPage() {
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-cyan-500/10 blur-[150px] rounded-full" />
         
         <div className="relative max-w-6xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-4">
-            <ShieldCheck size={32} className="text-green-400" />
-            <span className="text-green-400 font-semibold tracking-wide">PATIENT SAFETY HUB</span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={32} className="text-green-400" />
+              <span className="text-green-400 font-semibold tracking-wide">SMART TOURIST PROTECTION SYSTEM — PATIENT SAFETY HUB</span>
+            </div>
+            <AccountMenu />
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mb-4">
             Your Safety Dashboard
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl">
-            Monitor your medical journey, verify your coordinator, and access safety resources.
+            Monitor your protection journey, verify your coordinator, access safety resources, and stay connected throughout your medical travel in India.
           </p>
         </div>
       </section>
 
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-8">
+        {/* Protection Not Activated Message */}
+        {!safetyProfile && (
+          <div className="rounded-[32px] border border-slate-800 bg-slate-900/50 backdrop-blur-3xl p-8">
+            <div className="flex items-center gap-4 mb-4">
+              <ShieldCheck size={32} className="text-slate-500" />
+              <h2 className="text-2xl font-bold text-white">Smart Tourist Protection Not Activated</h2>
+            </div>
+            <p className="text-slate-400 text-lg leading-relaxed">
+              Smart Tourist Protection has not been activated for your journey yet. Please contact your HealWithIndia coordinator to activate protection access.
+            </p>
+          </div>
+        )}
+
+        {/* Unified Protection Status - Top Priority */}
+        {protectionStatusData && safetyProfile && (
+          <ProtectionStatus
+            status={protectionStatusData.protectionStatus}
+            latestCheckIn={protectionStatusData.latestCheckIn}
+            checklistProgress={protectionStatusData.checklistProgress}
+            coordinatorStatus={protectionStatusData.coordinatorStatus}
+            activeAssistance={protectionStatusData.activeAssistance}
+            recommendation={protectionStatusData.recommendation}
+          />
+        )}
+
+        {/* Urgent Assistance - High Visibility */}
+        <div className={`rounded-[32px] p-6 lg:p-8 border ${
+          protectionStatusData?.protectionStatus?.urgency === 'critical' || protectionStatusData?.protectionStatus?.urgency === 'high'
+            ? 'bg-red-950/20 border-red-800'
+            : 'bg-gradient-to-r from-red-950 to-orange-950 border-orange-800'
+        }`}>
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className={`h-16 w-16 rounded-2xl ${
+                protectionStatusData?.protectionStatus?.urgency === 'critical' || protectionStatusData?.protectionStatus?.urgency === 'high'
+                  ? 'bg-red-500/20 border-red-500/30'
+                  : 'bg-orange-500/20 border-orange-500/30'
+              } flex items-center justify-center`}>
+                <AlertTriangle size={32} className={
+                  protectionStatusData?.protectionStatus?.urgency === 'critical' || protectionStatusData?.protectionStatus?.urgency === 'high'
+                    ? 'text-red-400'
+                    : 'text-orange-400'
+                } />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-2">Urgent Assistance</h3>
+                <p className="text-slate-400">
+                  {protectionStatusData?.activeAssistance?.hasActive
+                    ? `You have ${protectionStatusData.activeAssistance.count} active assistance case(s).`
+                    : 'Request immediate help if you need urgent support.'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <a
+                href="tel:+919116734675"
+                className="inline-flex items-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 rounded-2xl font-semibold transition"
+              >
+                <Phone size={24} />
+                Call Emergency
+              </a>
+              <a
+                href="/safety/urgent-help"
+                className={`inline-flex items-center gap-3 px-6 py-4 rounded-2xl font-semibold transition ${
+                  protectionStatusData?.protectionStatus?.urgency === 'critical' || protectionStatusData?.protectionStatus?.urgency === 'high'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-orange-600 hover:bg-orange-700'
+                }`}
+              >
+                <AlertTriangle size={24} />
+                {protectionStatusData?.activeAssistance?.hasActive ? 'View Cases' : 'Request Help'}
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Journey Stage Card */}
         {safetyProfile ? (
           <div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
@@ -290,56 +421,65 @@ export default function SafetyHubPage() {
           </div>
         )}
 
-        {/* Smart Safety Status */}
-        {riskData && (
-          <div className={`bg-slate-950 border rounded-[32px] p-8 ${
-            riskData.risk_level === 'critical' ? 'border-red-800' :
-            riskData.risk_level === 'high' ? 'border-orange-800' :
-            riskData.risk_level === 'elevated' ? 'border-yellow-800' :
-            riskData.risk_level === 'watch' ? 'border-blue-800' :
-            'border-green-800'
-          }`}>
-            <div className="flex items-center gap-3 mb-6">
-              <ShieldCheck size={24} className={
-                riskData.risk_level === 'critical' ? 'text-red-400' :
-                riskData.risk_level === 'high' ? 'text-orange-400' :
-                riskData.risk_level === 'elevated' ? 'text-yellow-400' :
-                riskData.risk_level === 'watch' ? 'text-blue-400' :
-                'text-green-400'
-              } />
-              <h2 className="text-2xl font-bold">Your Journey Safety Status</h2>
-            </div>
-            
-            <div className="mb-6">
-              <p className={`text-2xl font-semibold mb-2 ${
-                riskData.risk_level === 'critical' ? 'text-red-400' :
-                riskData.risk_level === 'high' ? 'text-orange-400' :
-                riskData.risk_level === 'elevated' ? 'text-yellow-400' :
-                riskData.risk_level === 'watch' ? 'text-blue-400' :
-                'text-green-400'
-              }`}>
-                {riskData.patient_safe_status}
-              </p>
-              <p className="text-slate-400">
-                {riskData.explanation}
-              </p>
-            </div>
-
-            {riskData.recommended_actions && riskData.recommended_actions.length > 0 && (
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                <p className="text-slate-400 text-sm mb-4 font-semibold">Recommended Actions</p>
-                <ul className="space-y-3">
-                  {riskData.recommended_actions.map((action, index) => (
-                    <li key={index} className="flex items-start gap-3 text-slate-300">
-                      <CheckCircle size={18} className="text-blue-400 mt-0.5 flex-shrink-0" />
-                      <span>{action}</span>
-                    </li>
-                  ))}
-                </ul>
+        {/* Protection Timeline - Unified View */}
+        <div className="bg-slate-950 border border-slate-800 rounded-[32px] p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Activity size={24} className="text-purple-400" />
+            <h2 className="text-2xl font-bold">Protection Timeline</h2>
+          </div>
+          
+          <div className="space-y-4">
+            {[
+              ...(checkIns?.map(mapCheckInToTimeline) || []),
+              ...(checklist?.map(mapChecklistToTimeline) || []),
+              ...(coordinatorVerification ? [mapCoordinatorToTimeline(coordinatorVerification)] : []),
+            ].length > 0 ? (
+              sortTimelineByTimestamp([
+                ...(checkIns?.map(mapCheckInToTimeline) || []),
+                ...(checklist?.map(mapChecklistToTimeline) || []),
+                ...(coordinatorVerification ? [mapCoordinatorToTimeline(coordinatorVerification)] : []),
+              ]).slice(0, 10).map((event) => {
+                const colors = getTimelineStatusColorClasses(event.status);
+                return (
+                  <div
+                    key={event.id}
+                    className={`flex items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors`}
+                  >
+                    <div className={`p-2 rounded-lg ${colors.bg} ${colors.border}`}>
+                      {event.status === 'safe' ? (
+                        <CheckCircle size={18} className={colors.icon} />
+                      ) : event.status === 'verified' ? (
+                        <UserRoundCheck size={18} className={colors.icon} />
+                      ) : event.status === 'completed' ? (
+                        <CheckCircle size={18} className={colors.icon} />
+                      ) : event.status === 'active' ? (
+                        <AlertTriangle size={18} className={colors.icon} />
+                      ) : (
+                        <Clock size={18} className={colors.icon} />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-white">{event.title}</p>
+                      <p className="text-slate-400 text-sm">{event.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-xs font-medium px-2 py-1 rounded-full ${colors.badge}`}>
+                        {event.status}
+                      </p>
+                      <p className="text-slate-500 text-xs mt-1">
+                        {new Date(event.timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                No protection events recorded yet
               </div>
             )}
           </div>
-        )}
+        </div>
 
         {/* Coordinator Information */}
         {coordinatorVerification && coordinatorVerification.is_verified ? (
@@ -517,33 +657,6 @@ export default function SafetyHubPage() {
           )}
         </div>
 
-        {/* Emergency Contact */}
-        <div className="bg-gradient-to-r from-green-950 to-emerald-950 border border-green-800 rounded-[32px] p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-2xl font-bold mb-2">Need Immediate Assistance?</h3>
-              <p className="text-slate-400">
-                Contact our emergency support line or submit an urgent help request.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <a
-                href="tel:+919116734675"
-                className="inline-flex items-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 rounded-2xl font-semibold transition"
-              >
-                <Phone size={24} />
-                Call
-              </a>
-              <a
-                href="/safety/urgent-help"
-                className="inline-flex items-center gap-3 px-6 py-4 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold transition"
-              >
-                <AlertTriangle size={24} />
-                Urgent Help
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   );

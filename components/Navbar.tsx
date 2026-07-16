@@ -50,6 +50,7 @@ type Hospital = {
 
 const NAV_LINKS: NavLink[] = [
   { name: "Home", href: "/" },
+  { name: "Protection System", href: "/protection" },
   { name: "Why India", href: "/why-india" },
   { name: "About", href: "/about" },
   { name: "FAQ", href: "/faq" },

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   Mail,
@@ -14,14 +14,23 @@ import {
   UserRound,
 } from "lucide-react";
 
-export default function PatientLoginPage() {
+function PatientLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Show error from middleware redirect
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'no_access') {
+      setError("Patient portal access has not been enabled for this account. Please contact your HealWithIndia coordinator.");
+    }
+  }, [searchParams]);
 
   const handleLogin = async () => {
     setError("");
@@ -34,7 +43,7 @@ export default function PatientLoginPage() {
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -45,6 +54,19 @@ export default function PatientLoginPage() {
         return;
       }
 
+      // Transition from INVITE_PENDING to ACTIVE on first successful login
+      // This is a server-side API call that will handle auth context properly
+      try {
+        await fetch('/api/safety/transition-portal-active', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (transitionError) {
+        // Transition failure is non-critical - allow login to proceed
+        console.error('Transition warning:', transitionError);
+      }
+
+      // Let middleware verify patient portal access server-side
       router.replace("/safety");
     } catch {
       setError("Something went wrong.");
@@ -168,5 +190,13 @@ export default function PatientLoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function PatientLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#020817] flex items-center justify-center text-white">Loading...</div>}>
+      <PatientLoginContent />
+    </Suspense>
   );
 }

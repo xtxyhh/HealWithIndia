@@ -5,15 +5,18 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://healwithindia.vercel.app"),
 
   title: {
-    default: "HealWithIndia | Medical Tourism & Healthcare Concierge",
+    default: "HealWithIndia | Medical Tourism & Smart Tourist Protection System",
     template: "%s | HealWithIndia",
   },
 
   description:
-    "Connect with India's leading hospitals, experienced doctors and affordable treatment options. Medical tourism, treatment planning, hospital selection, visa assistance and patient support.",
+    "Connect with India's leading hospitals, experienced doctors and affordable treatment options with an integrated Smart Tourist Protection System for international medical travellers.",
 
   keywords: [
     "Medical Tourism India",
+    "Smart Tourist Protection System",
+    "International Patient Safety India",
+    "Medical Travel Safety Platform",
     "Treatment in India",
     "Healthcare Concierge",
     "Medical Travel",
@@ -50,10 +53,10 @@ export const metadata: Metadata = {
 
   openGraph: {
     title:
-      "HealWithIndia | Medical Tourism & Healthcare Concierge",
+      "HealWithIndia | Medical Tourism & Smart Tourist Protection System",
 
     description:
-      "Access India's leading hospitals and save up to 90% on treatment costs with complete medical travel support.",
+      "Access India's leading hospitals and save up to 90% on treatment costs with an integrated Smart Tourist Protection System for international medical travellers.",
 
     url: "https://healwithindia.vercel.app",
 

@@ -96,6 +96,17 @@ return;
 
 
 
+// Verify admin role using server-side function
+const { data: { user } } = await supabase.auth.getUser();
+const { data: hasAdminRole, error: roleError } = await supabase.rpc('verify_admin_role');
+
+if (roleError || !hasAdminRole) {
+  await supabase.auth.signOut();
+  setError("You do not have permission to access the Admin Portal.");
+  setLoading(false);
+  return;
+}
+
 router.replace("/admin");
 
 
