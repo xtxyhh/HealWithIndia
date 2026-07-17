@@ -93,12 +93,11 @@ export default function LeadsPage(){
 
 
 const [patients,setPatients]=useState<Patient[]>([]);
-
 const [loading,setLoading]=useState(true);
-
 const [search,setSearch]=useState("");
-
 const [status,setStatus]=useState("All");
+const [currentPage,setCurrentPage]=useState(1);
+const itemsPerPage = 10;
 
 
 
@@ -147,62 +146,58 @@ setLoading(false);
 
 
 const filteredPatients=useMemo(()=>{
-
-
-
 return patients.filter((patient)=>{
-
-
-
 const matchesSearch=
-
-
-
 patient.full_name
-
 ?.toLowerCase()
-
 .includes(search.toLowerCase())
-
 ||
-
 patient.country
-
 ?.toLowerCase()
-
 .includes(search.toLowerCase())
-
 ||
-
 patient.treatment
-
 ?.toLowerCase()
-
 .includes(search.toLowerCase());
 
-
-
-
-
 const matchesStatus=
-
 status==="All"
-
 ||
-
 patient.status===status;
 
-
-
 return matchesSearch && matchesStatus;
-
-
-
 })
-
-
-
 },[patients,search,status]);
+
+const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+const startIndex = (currentPage - 1) * itemsPerPage;
+const paginatedPatients = filteredPatients.slice(startIndex, startIndex + itemsPerPage);
+
+const handleExportCSV = () => {
+  const headers = ["ID", "Full Name", "Email", "Country", "Treatment", "Status", "Phone", "Assigned Hospital", "Estimated Revenue"];
+  const rows = filteredPatients.map(p => [
+    p.id,
+    p.full_name || "",
+    p.email || "",
+    p.country || "",
+    p.treatment || "",
+    p.status || "",
+    p.phone || "",
+    p.assigned_hospital || "",
+    p.estimated_revenue || 0
+  ]);
+  
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + [headers.join(","), ...rows.map(e => e.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(","))].join("\n");
+    
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 
 
@@ -447,41 +442,17 @@ Refresh
 
 
 <button
-
-className="
-
-flex
-
-items-center
-
-gap-3
-
-px-7
-
-py-4
-
-rounded-[22px]
-
-bg-gradient-to-r
-
-from-blue-600
-
-to-cyan-500
-
-font-semibold
-
-hover:scale-[1.03]
-
-transition-all
-
-"
-
+onClick={handleExportCSV}
+className="flex items-center gap-3 px-6 py-4 rounded-[22px] bg-slate-900 border border-slate-800 hover:border-blue-500 transition font-semibold"
 >
+Export CSV
+</button>
 
+<button
+className="flex items-center gap-3 px-7 py-4 rounded-[22px] bg-gradient-to-r from-blue-600 to-cyan-500 font-semibold hover:scale-[1.03] transition-all"
+>
 <Plus size={18}/>
-
 New Lead
-
 </button>
 
 
@@ -986,15 +957,10 @@ text-slate-500
 
 value={search}
 
-onChange={(e)=>
-
-setSearch(
-
-e.target.value
-
-)
-
-}
+onChange={(e)=>{
+setSearch(e.target.value);
+setCurrentPage(1);
+}}
 
 placeholder="Search patients, country or treatment..."
 
@@ -1122,11 +1088,10 @@ statuses.map((item)=>(
 
 key={item}
 
-onClick={()=>
-
-setStatus(item)
-
-}
+onClick={()=>{
+setStatus(item);
+setCurrentPage(1);
+}}
 
 className={`
 
@@ -1453,9 +1418,7 @@ Actions
 <tbody>
 
 {
-
-filteredPatients.map(
-
+paginatedPatients.map(
 (patient)=>(
 
 <tr
@@ -2283,6 +2246,29 @@ View
 
 
 </div>
+
+{/* Pagination Controls */}
+{totalPages > 1 && (
+  <div className="flex justify-between items-center px-8 py-5 bg-slate-900 border-t border-slate-800">
+    <button
+      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition text-sm font-semibold"
+    >
+      Previous
+    </button>
+    <span className="text-slate-400 text-sm font-medium">
+      Page {currentPage} of {totalPages}
+    </span>
+    <button
+      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+      disabled={currentPage === totalPages}
+      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition text-sm font-semibold"
+    >
+      Next
+    </button>
+  </div>
+)}
 
 
 

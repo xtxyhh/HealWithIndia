@@ -18,6 +18,8 @@ function AdminLoginContent() {
     const errorParam = searchParams.get('error');
     if (errorParam === 'unauthorized') {
       setError("You do not have permission to access the Admin Portal. This login is for HealWithIndia administrators only.");
+    } else if (errorParam === 'forbidden') {
+      setError("Access Denied: Your staff account does not have permission to access this section of the Admin Portal.");
     }
   }, [searchParams]);
 

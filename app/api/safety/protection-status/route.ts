@@ -75,19 +75,36 @@ export async function GET(request: NextRequest) {
     };
 
     // Calculate protection status
-    const protectionStatus = calculateProtectionStatus({
-      hasSafetyProfile: !!safetyProfile,
-      journeyStage: safetyProfile?.journey_stage || null,
-      checklistCompletion,
-      hasVerifiedCoordinator: !!coordinatorData && coordinatorData.length > 0,
-      activeCases,
-      latestCheckIn: {
-        status: latestCheckIn?.status || null,
-        type: latestCheckIn?.check_in_type || null,
-        createdAt: latestCheckIn?.created_at || null,
-      },
-      riskLevel: riskAssessment?.risk_level || null,
-    });
+    let protectionStatus: any = null;
+    const dbStatus = safetyProfile?.protection_status;
+
+    if (dbStatus && ["ACTIVE", "SUSPENDED", "COMPLETED"].includes(dbStatus)) {
+      protectionStatus = {
+        status: dbStatus,
+        label: dbStatus === "ACTIVE" ? "Protection Active" : dbStatus === "SUSPENDED" ? "Protection Suspended" : "Journey Completed",
+        description: dbStatus === "ACTIVE" 
+          ? "Your protection journey is active. All systems operational." 
+          : dbStatus === "SUSPENDED" 
+            ? "Your tourist protection is currently suspended." 
+            : "Your medical tourism journey was successfully completed.",
+        color: dbStatus === "ACTIVE" ? "green" : dbStatus === "SUSPENDED" ? "red" : "cyan",
+        urgency: "low",
+      };
+    } else {
+      protectionStatus = calculateProtectionStatus({
+        hasSafetyProfile: !!safetyProfile,
+        journeyStage: safetyProfile?.journey_stage || null,
+        checklistCompletion,
+        hasVerifiedCoordinator: !!coordinatorData && coordinatorData.length > 0,
+        activeCases,
+        latestCheckIn: {
+          status: latestCheckIn?.status || null,
+          type: latestCheckIn?.check_in_type || null,
+          createdAt: latestCheckIn?.created_at || null,
+        },
+        riskLevel: riskAssessment?.risk_level || null,
+      });
+    }
 
     // Calculate recommendation
     const incompleteItems = checklist

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import TrustVerificationBar from "@/components/TrustVerificationBar";
 import {
   ShieldCheck,
   CheckCircle,
@@ -161,6 +162,7 @@ export default function CheckInsPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <TrustVerificationBar />
       {/* Header */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-slate-950 to-cyan-950 py-16">
         <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[150px] rounded-full" />

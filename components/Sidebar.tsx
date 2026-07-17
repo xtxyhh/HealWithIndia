@@ -68,8 +68,8 @@ const menu: MenuItem[] = [
     allowedRoles: ["admin", "super_admin", "finance"],
   },
   {
-    name: "Employees",
-    href: "/admin/employees",
+    name: "User Management",
+    href: "/admin/users",
     icon: UserCog,
     allowedRoles: ["admin", "super_admin"],
   },
@@ -102,6 +102,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

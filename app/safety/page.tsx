@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import ProtectionStatus from "@/components/ProtectionStatus";
 import AccountMenu from "@/components/AccountMenu";
+import TrustVerificationBar from "@/components/TrustVerificationBar";
 import {
   ShieldCheck,
   UserRoundCheck,
@@ -101,60 +102,69 @@ export default function SafetyHubPage() {
         return;
       }
 
-      // Load safety profile via API (no patient_id needed - resolved from auth)
-      const profileResponse = await fetch(`/api/safety/profile`);
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        setSafetyProfile(profileData.data);
-        
-        // If protection is not activated, don't load checklist data
-        if (profileData.protection_status === 'NOT_ACTIVATED') {
-          setChecklist([]);
+      // Load profile, coordinator, check-ins, risk and protection status concurrently
+      const [
+        profileRes,
+        coordinatorRes,
+        checkInsRes,
+        riskRes,
+        protectionRes
+      ] = await Promise.all([
+        fetch(`/api/safety/profile`),
+        fetch(`/api/safety/coordinator`),
+        fetch(`/api/safety/check-ins`),
+        fetch(`/api/safety/risk`),
+        fetch(`/api/safety/protection-status`)
+      ]);
+
+      let hasProfile = false;
+
+      if (profileRes.ok) {
+        const profileData = await profileRes.ok ? await profileRes.json() : null;
+        if (profileData) {
+          setSafetyProfile(profileData.data);
+          hasProfile = !!profileData.data;
+          
+          if (profileData.protection_status === 'NOT_ACTIVATED') {
+            setChecklist([]);
+            hasProfile = false;
+          }
         }
       } else {
-        const errorData = await profileResponse.json();
+        const errorData = await profileRes.json();
         if (errorData.protection_status === 'NOT_ACTIVATED') {
           setSafetyProfile(null);
           setChecklist([]);
         }
       }
 
-      // Load coordinator verification via API (no patient_id needed - resolved from auth)
-      const coordinatorResponse = await fetch(`/api/safety/coordinator`);
-      if (coordinatorResponse.ok) {
-        const { data: coordinatorData } = await coordinatorResponse.json();
+      if (coordinatorRes.ok) {
+        const { data: coordinatorData } = await coordinatorRes.json();
         setCoordinatorVerification(coordinatorData);
       }
 
-      // Load check-ins via API (no patient_id needed - resolved from auth)
-      const checkInsResponse = await fetch(`/api/safety/check-ins`);
-      if (checkInsResponse.ok) {
-        const { data: checkInsData } = await checkInsResponse.json();
+      if (checkInsRes.ok) {
+        const { data: checkInsData } = await checkInsRes.json();
         setCheckIns(checkInsData || []);
       }
 
-      // Load checklist via API (no patient_id needed - resolved from auth)
-      // Only load if protection is activated
-      if (safetyProfile) {
+      if (riskRes.ok) {
+        const riskData = await riskRes.json();
+        setRiskData(riskData);
+      }
+
+      if (protectionRes.ok) {
+        const protectionData = await protectionRes.json();
+        setProtectionStatusData(protectionData);
+      }
+
+      // Fetch checklist concurrently if active safety profile is verified
+      if (hasProfile) {
         const checklistResponse = await fetch(`/api/safety/checklist`);
         if (checklistResponse.ok) {
           const { data: checklistData } = await checklistResponse.json();
           setChecklist(checklistData || []);
         }
-      }
-
-      // Load risk assessment via API (no patient_id needed - resolved from auth)
-      const riskResponse = await fetch(`/api/safety/risk`);
-      if (riskResponse.ok) {
-        const riskData = await riskResponse.json();
-        setRiskData(riskData);
-      }
-
-      // Load unified protection status via API
-      const protectionStatusResponse = await fetch(`/api/safety/protection-status`);
-      if (protectionStatusResponse.ok) {
-        const protectionData = await protectionStatusResponse.json();
-        setProtectionStatusData(protectionData);
       }
 
     } catch (err: any) {
@@ -270,6 +280,7 @@ export default function SafetyHubPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <TrustVerificationBar />
       {/* Header */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-slate-950 to-cyan-950 py-16">
         <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[150px] rounded-full" />

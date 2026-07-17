@@ -82,6 +82,28 @@ const { data: protectionStatus } = await supabase
   .eq("patient_id", parseInt(id))
   .single();
 
+// Parse financials from notes JSON
+let estimatedCost = patient?.estimated_revenue || 0;
+let paidAmount = patient?.estimated_revenue || 0;
+let currency = "USD";
+let invoiceStatus = "UNPAID";
+let notesText = patient?.description || "";
+
+try {
+  const finData = JSON.parse(patient?.notes || "{}");
+  if (finData.estimated_cost !== undefined) {
+    estimatedCost = Number(finData.estimated_cost) || 0;
+    paidAmount = Number(finData.paid_amount) || 0;
+    currency = finData.currency || "USD";
+    invoiceStatus = finData.invoice_status || "UNPAID";
+    notesText = finData.notes_text || patient?.description || "";
+  }
+} catch (e) {}
+
+const remainingAmount = estimatedCost - paidAmount;
+const paidPercent = estimatedCost > 0 ? Math.round((paidAmount / estimatedCost) * 100) : 0;
+const pendingPercent = estimatedCost > 0 ? Math.round((remainingAmount / estimatedCost) * 100) : 0;
+
 
 
 
@@ -1000,218 +1022,80 @@ mt-14
 
 {/* REVENUE */}
 
-
-
+// Render parsed financials
 <div
-
-className="
-
-rounded-[36px]
-
-border
-
-border-slate-800
-
-bg-slate-900/50
-
-backdrop-blur-3xl
-
-p-8
-
-"
-
+  className="
+  rounded-[36px]
+  border
+  border-slate-800
+  bg-slate-900/50
+  backdrop-blur-3xl
+  p-8
+  "
 >
-
-
-
-
-
-<p className="text-slate-400">
-
-Estimated Revenue
-
-</p>
-
-
-
-<h2
-
-className="
-
-text-6xl
-
-font-bold
-
-mt-5
-
-bg-gradient-to-r
-
-from-green-400
-
-to-cyan-400
-
-bg-clip-text
-
-text-transparent
-
-"
-
->
-
-$
-
-{
-
-patient
-
-.estimated_revenue
-
-?.toLocaleString()
-
-||
-
-0
-
-}
-
-</h2>
-
-
-
-
-
-
-
-<div
-
-className="
-
-grid
-
-grid-cols-2
-
-gap-6
-
-mt-10
-
-"
-
->
-
-
-
-
-
-<div
-
-className="
-
-rounded-[24px]
-
-bg-slate-950/70
-
-border
-
-border-slate-800
-
-p-6
-
-"
-
->
-
-<p className="text-slate-500">
-
-Paid
-
-</p>
-
-
-
-<h3
-
-className="
-
-text-3xl
-
-font-bold
-
-text-green-400
-
-mt-4
-
-"
-
->
-
-60%
-
-</h3>
-
-</div>
-
-
-
-
-
-
-
-<div
-
-className="
-
-rounded-[24px]
-
-bg-slate-950/70
-
-border
-
-border-slate-800
-
-p-6
-
-"
-
->
-
-<p className="text-slate-500">
-
-Pending
-
-</p>
-
-
-
-<h3
-
-className="
-
-text-3xl
-
-font-bold
-
-text-yellow-400
-
-mt-4
-
-"
-
->
-
-40%
-
-</h3>
-
-</div>
-
-
-
-</div>
-
-
-
-
-
+  <div className="flex justify-between items-center">
+    <p className="text-slate-400">Estimated Cost ({currency})</p>
+    <span className="px-3 py-1 rounded-full bg-slate-950 border border-slate-800 text-xs font-semibold text-yellow-400">
+      {invoiceStatus.replace("_", " ")}
+    </span>
+  </div>
+
+  <h2
+    className="
+    text-6xl
+    font-bold
+    mt-5
+    bg-gradient-to-r
+    from-green-400
+    to-cyan-400
+    bg-clip-text
+    text-transparent
+    "
+  >
+    {currency === "USD" ? "$" : currency === "EUR" ? "€" : "₹"}
+    {estimatedCost.toLocaleString()}
+  </h2>
+
+  <div
+    className="
+    grid
+    grid-cols-2
+    gap-6
+    mt-10
+    "
+  >
+    <div
+      className="
+      rounded-[24px]
+      bg-slate-950/70
+      border
+      border-slate-800
+      p-6
+      "
+    >
+      <p className="text-slate-500">Paid Amount</p>
+      <h3 className="text-3xl font-bold text-green-400 mt-4">
+        {currency === "USD" ? "$" : currency === "EUR" ? "€" : "₹"}
+        {paidAmount.toLocaleString()} ({paidPercent}%)
+      </h3>
+    </div>
+
+    <div
+      className="
+      rounded-[24px]
+      bg-slate-950/70
+      border
+      border-slate-800
+      p-6
+      "
+    >
+      <p className="text-slate-500">Remaining Amount</p>
+      <h3 className="text-3xl font-bold text-yellow-400 mt-4">
+        {currency === "USD" ? "$" : currency === "EUR" ? "€" : "₹"}
+        {remainingAmount.toLocaleString()} ({pendingPercent}%)
+      </h3>
+    </div>
+  </div>
 </div>
 
 
@@ -1620,6 +1504,7 @@ patient.notes
   patientEmail={patient.email}
   portalAccess={portalAccess}
   protectionStatus={protectionStatus}
+  financials={{ estimatedCost, paidAmount, currency, invoiceStatus, notesText }}
 />
 
 

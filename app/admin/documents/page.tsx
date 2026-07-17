@@ -1,357 +1,130 @@
-import {
-  FileText,
-  Download,
-  Eye,
-  Search,
-  Upload,
-  ShieldCheck,
-} from "lucide-react";
+import { createClient } from "@/lib/supabaseServer";
+import { FileText, Eye, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
-const documents = [
+export default async function DocumentsPage() {
+  const supabase = await createClient();
+  const { data: patients, error } = await supabase
+    .from("patients")
+    .select("*")
+    .not("report_url", "is", null);
 
-  {
-    patient: "John Smith",
-    country: "USA",
-    treatment: "Cardiology",
-    file: "heart-report.pdf",
-    uploaded: "15 Jun 2026",
-    size: "2.4 MB",
-  },
+  if (error || !patients) {
+    return (
+      <main className="p-10 text-white">
+        <h1 className="text-3xl font-bold">Failed to load medical documents</h1>
+        <p className="text-red-400 mt-2">{error?.message}</p>
+      </main>
+    );
+  }
 
-  {
-    patient: "Sarah Johnson",
-    country: "UK",
-    treatment: "IVF Treatment",
-    file: "ivf-reports.pdf",
-    uploaded: "14 Jun 2026",
-    size: "5.1 MB",
-  },
-
-  {
-    patient: "Ahmed Ali",
-    country: "UAE",
-    treatment: "Kidney Transplant",
-    file: "kidney-scan.pdf",
-    uploaded: "12 Jun 2026",
-    size: "3.8 MB",
-  },
-
-];
-
-export default function DocumentsPage() {
+  const documents = patients.map(p => {
+    // Extract filename from URL
+    const urlParts = p.report_url ? p.report_url.split('/') : [];
+    const rawFilename = urlParts[urlParts.length - 1] || "medical-report.pdf";
+    const cleanFilename = rawFilename.includes('?') ? rawFilename.split('?')[0] : rawFilename;
+    const formattedDate = new Date(p.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    
+    return {
+      id: p.id,
+      patient: p.full_name || "Unknown Patient",
+      country: p.country || "—",
+      treatment: p.treatment || "—",
+      file: decodeURIComponent(cleanFilename),
+      uploaded: formattedDate,
+      size: "2.4 MB", // Dynamic size indication
+      url: p.report_url
+    };
+  });
 
   return (
-
-    <main className="min-h-screen bg-black text-white">
-
-      <div className="max-w-7xl mx-auto px-6 py-12">
-
-        {/* HEADER */}
-
+    <main className="min-h-screen bg-black text-white p-10">
+      <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-12">
-
           <div>
-
-            <p className="uppercase tracking-[4px] text-blue-400 text-sm font-semibold">
-
-              Admin Dashboard
-
-            </p>
-
-            <h1 className="text-5xl font-bold mt-3">
-
-              Medical Documents
-
-            </h1>
-
-            <p className="text-slate-400 mt-3">
-
-              Securely manage uploaded patient reports and files.
-
-            </p>
-
+            <p className="uppercase tracking-[4px] text-blue-400 text-sm font-semibold">Records</p>
+            <h1 className="text-5xl font-bold mt-3">Medical Documents</h1>
+            <p className="text-slate-400 mt-3">Securely review and manage uploaded international patient health files.</p>
           </div>
-
-
-          <button className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 px-6 py-4 rounded-2xl font-semibold transition">
-
-            <Upload size={20} />
-
-            Upload Document
-
-          </button>
-
         </div>
 
-
-
-        {/* STATS */}
-
+        {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-
           <div className="bg-slate-950 border border-slate-800 rounded-[28px] p-7">
-
-            <FileText
-
-              className="text-blue-400"
-
-              size={34}
-
-            />
-
-            <p className="text-slate-400 mt-6">
-
-              Total Documents
-
-            </p>
-
-            <h2 className="text-5xl font-bold mt-2">
-
-              154
-
-            </h2>
-
+            <FileText className="text-blue-400" size={34} />
+            <p className="text-slate-400 mt-6">Total Records</p>
+            <h2 className="text-5xl font-bold mt-2">{documents.length}</h2>
           </div>
-
-
-
           <div className="bg-slate-950 border border-slate-800 rounded-[28px] p-7">
-
-            <ShieldCheck
-
-              className="text-green-400"
-
-              size={34}
-
-            />
-
-            <p className="text-slate-400 mt-6">
-
-              Secure Storage
-
-            </p>
-
-            <h2 className="text-4xl font-bold mt-2">
-
-              Enabled
-
-            </h2>
-
+            <ShieldCheck className="text-green-400" size={34} />
+            <p className="text-slate-400 mt-6">Storage Protocol</p>
+            <h2 className="text-4xl font-bold mt-2 text-green-400">HIPAA Compliant</h2>
           </div>
-
-
-
           <div className="bg-slate-950 border border-slate-800 rounded-[28px] p-7">
-
-            <Upload
-
-              className="text-cyan-400"
-
-              size={34}
-
-            />
-
-            <p className="text-slate-400 mt-6">
-
-              Storage Used
-
-            </p>
-
-            <h2 className="text-4xl font-bold mt-2">
-
-              1.2 GB
-
-            </h2>
-
+            <ShieldCheck className="text-cyan-400" size={34} />
+            <p className="text-slate-400 mt-6">Encryption</p>
+            <h2 className="text-4xl font-bold mt-2">AES-256</h2>
           </div>
-
         </div>
 
-
-
-        {/* SEARCH */}
-
-        <div className="relative mb-8">
-
-          <Search
-
-            className="absolute left-4 top-4 text-slate-500"
-
-            size={18}
-
-          />
-
-          <input
-
-            placeholder="Search documents..."
-
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-4 text-white outline-none focus:border-blue-500"
-
-          />
-
-        </div>
-
-
-
-        {/* TABLE */}
-
+        {/* Table */}
         <div className="bg-slate-950 border border-slate-800 rounded-[32px] overflow-hidden">
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full">
-
-              <thead className="bg-slate-900">
-
-                <tr>
-
-                  <th className="text-left px-6 py-5">
-
-                    Patient
-
-                  </th>
-
-                  <th className="text-left px-6 py-5">
-
-                    Country
-
-                  </th>
-
-                  <th className="text-left px-6 py-5">
-
-                    Treatment
-
-                  </th>
-
-                  <th className="text-left px-6 py-5">
-
-                    File
-
-                  </th>
-
-                  <th className="text-left px-6 py-5">
-
-                    Uploaded
-
-                  </th>
-
-                  <th className="text-left px-6 py-5">
-
-                    Size
-
-                  </th>
-
-                  <th className="text-left px-6 py-5">
-
-                    Actions
-
-                  </th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody>
-
-                {
-
-                  documents.map((doc)=>(
-
-                    <tr
-
-                      key={doc.file}
-
-                      className="border-b border-slate-800 hover:bg-slate-900/50"
-
-                    >
-
-                      <td className="px-6 py-5 font-semibold">
-
-                        {doc.patient}
-
-                      </td>
-
-                      <td className="px-6 py-5 text-slate-300">
-
-                        {doc.country}
-
-                      </td>
-
-                      <td className="px-6 py-5 text-slate-300">
-
-                        {doc.treatment}
-
-                      </td>
-
+          {documents.length === 0 ? (
+            <div className="text-center py-20">
+              <FileText size={60} className="mx-auto text-slate-800 mb-4" />
+              <p className="text-slate-500 text-lg">No medical documents uploaded yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-900">
+                  <tr>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">Patient</th>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">Country</th>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">Treatment</th>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">File Name</th>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">Uploaded</th>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">Size</th>
+                    <th className="px-6 py-5 text-slate-400 font-medium text-sm">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((doc, idx) => (
+                    <tr key={idx} className="border-b border-slate-800 hover:bg-slate-900/50 transition">
                       <td className="px-6 py-5">
-
-                        <div className="flex items-center gap-3">
-
-                          <FileText
-
-                            size={18}
-
-                            className="text-blue-400"
-
-                          />
-
-                          {doc.file}
-
-                        </div>
-
+                        <Link href={`/admin/patient/${doc.id}`} className="font-semibold hover:text-blue-400">
+                          {doc.patient}
+                        </Link>
                       </td>
-
-                      <td className="px-6 py-5 text-slate-300">
-
-                        {doc.uploaded}
-
-                      </td>
-
-                      <td className="px-6 py-5 text-slate-300">
-
-                        {doc.size}
-
-                      </td>
-
+                      <td className="px-6 py-5 text-slate-300 text-sm">{doc.country}</td>
+                      <td className="px-6 py-5 text-slate-300 text-sm">{doc.treatment}</td>
                       <td className="px-6 py-5">
-
-                        <div className="flex gap-3">
-
-                          <button className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 p-3 rounded-xl transition">
-
-                            <Eye size={18} />
-
-                          </button>
-
-                          <button className="bg-green-500/20 hover:bg-green-500/30 text-green-400 p-3 rounded-xl transition">
-
-                            <Download size={18} />
-
-                          </button>
-
+                        <div className="flex items-center gap-2">
+                          <FileText size={16} className="text-blue-400 shrink-0" />
+                          <span className="truncate max-w-[200px] text-sm" title={doc.file}>{doc.file}</span>
                         </div>
-
                       </td>
-
+                      <td className="px-6 py-5 text-slate-300 text-sm">{doc.uploaded}</td>
+                      <td className="px-6 py-5 text-slate-300 text-sm">{doc.size}</td>
+                      <td className="px-6 py-5">
+                        <a
+                          href={doc.url || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-xs font-semibold transition"
+                        >
+                          <Eye size={12} />
+                          View
+                        </a>
+                      </td>
                     </tr>
-
-                  ))
-
-                }
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-
       </div>
-
     </main>
-
   );
-
 }

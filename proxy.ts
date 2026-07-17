@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-
 import type { NextRequest } from "next/server";
-
 import { createServerClient } from "@supabase/ssr";
 
 function redirectWithCookies(url: URL, supabaseResponse: NextResponse) {
@@ -14,80 +12,42 @@ function redirectWithCookies(url: URL, supabaseResponse: NextResponse) {
   return redirectResponse;
 }
 
-export async function proxy(
-
-  request: NextRequest
-
-) {
-
-  let response = NextResponse.next({
-
+export async function proxy(request: NextRequest) {
+  const response = NextResponse.next({
     request,
-
   });
 
   const supabase = createServerClient(
-
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-
     {
-
       cookies: {
-
         get(name: string) {
-
           return request.cookies.get(name)?.value;
-
         },
-
         set(
-
           name: string,
-
           value: string,
-
-          options: any
-
+          options: Record<string, unknown>
         ) {
-
           response.cookies.set({
-
             name,
-
             value,
-
             ...options,
-
           });
-
         },
-
         remove(
-
           name: string,
-
-          options: any
-
+          options: Record<string, unknown>
         ) {
-
           response.cookies.set({
-
             name,
-
             value: "",
-
             ...options,
-
           });
-
         },
-
       },
-
     }
-
   );
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -124,6 +84,41 @@ export async function proxy(
       loginUrl.searchParams.set('error', 'unauthorized');
       return redirectWithCookies(loginUrl, response);
     }
+
+    // Enforce subpath-specific permissions
+    const pathname = request.nextUrl.pathname;
+    
+    if (pathname.startsWith('/admin/employees') || pathname.startsWith('/admin/users')) {
+      if (role !== 'admin' && role !== 'super_admin') {
+        const loginUrl = new URL('/admin/login', request.url);
+        loginUrl.searchParams.set('error', 'forbidden');
+        return redirectWithCookies(loginUrl, response);
+      }
+    }
+    
+    if (pathname.startsWith('/admin/revenue')) {
+      if (role !== 'admin' && role !== 'super_admin' && role !== 'finance') {
+        const loginUrl = new URL('/admin/login', request.url);
+        loginUrl.searchParams.set('error', 'forbidden');
+        return redirectWithCookies(loginUrl, response);
+      }
+    }
+    
+    if (pathname.startsWith('/admin/settings')) {
+      if (role !== 'admin' && role !== 'super_admin') {
+        const loginUrl = new URL('/admin/login', request.url);
+        loginUrl.searchParams.set('error', 'forbidden');
+        return redirectWithCookies(loginUrl, response);
+      }
+    }
+    
+    if (pathname.startsWith('/admin/safety')) {
+      if (role !== 'admin' && role !== 'super_admin' && role !== 'safety_operator') {
+        const loginUrl = new URL('/admin/login', request.url);
+        loginUrl.searchParams.set('error', 'forbidden');
+        return redirectWithCookies(loginUrl, response);
+      }
+    }
   }
 
   // Protect patient safety hub
@@ -143,17 +138,11 @@ export async function proxy(
   }
 
   return response;
-
 }
 
 export const config = {
-
   matcher: [
-
     "/admin/:path*",
-
     "/safety/:path*",
-
   ],
-
 };

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import TrustVerificationBar from "@/components/TrustVerificationBar";
 import {
   AlertTriangle,
   Phone,
@@ -210,6 +211,7 @@ export default function UrgentHelpPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <TrustVerificationBar />
       {/* Header */}
       <section className="relative overflow-hidden bg-gradient-to-br from-red-950 via-slate-950 to-orange-950 py-16">
         <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-red-500/10 blur-[150px] rounded-full" />

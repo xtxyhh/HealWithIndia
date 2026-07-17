@@ -41,6 +41,8 @@ export default function PatientPageClient({
 }: PatientPageClientProps) {
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filtered = patients.filter((p) => {
     if (!search) return true;
@@ -52,6 +54,34 @@ export default function PatientPageClient({
       p.treatment?.toLowerCase().includes(q)
     );
   });
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedPatients = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleExportCSV = () => {
+    const headers = ["ID", "Full Name", "Email", "Country", "Treatment", "Status", "Phone"];
+    const rows = filtered.map(p => [
+      p.id,
+      p.full_name || "",
+      p.email || "",
+      p.country || "",
+      p.treatment || "",
+      p.status || "",
+      p.phone || ""
+    ]);
+    
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${val.toString().replace(/"/g, '""')}"`).join(","))].join("\n");
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `patients_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <>
@@ -72,14 +102,22 @@ export default function PatientPageClient({
           </p>
         </div>
 
-        <button
-          id="add-patient-btn"
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-4 rounded-2xl flex items-center gap-3 transition font-semibold"
-        >
-          <Plus size={20} />
-          Add Patient
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={handleExportCSV}
+            className="bg-slate-900 border border-slate-800 hover:border-blue-500 px-6 py-4 rounded-2xl flex items-center gap-3 transition font-semibold"
+          >
+            Export CSV
+          </button>
+          <button
+            id="add-patient-btn"
+            onClick={() => setShowModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-4 rounded-2xl flex items-center gap-3 transition font-semibold"
+          >
+            <Plus size={20} />
+            Add Patient
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -117,7 +155,7 @@ export default function PatientPageClient({
         />
         <input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
           placeholder="Search patients by name, email, country or treatment..."
           className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-14 pr-5 py-4 text-white outline-none focus:border-blue-500 transition"
         />
@@ -151,7 +189,7 @@ export default function PatientPageClient({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((patient) => (
+                {paginatedPatients.map((patient) => (
                   <tr
                     key={patient.id}
                     className="border-b border-slate-800 hover:bg-slate-900/50 transition"
@@ -197,6 +235,28 @@ export default function PatientPageClient({
                 ))}
               </tbody>
             </table>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center px-8 py-5 bg-slate-900 border-t border-slate-800">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition text-sm font-semibold"
+                >
+                  Previous
+                </button>
+                <span className="text-slate-400 text-sm font-medium">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition text-sm font-semibold"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
