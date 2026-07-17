@@ -126,12 +126,7 @@ export async function POST(request: NextRequest) {
         .order("created_at", { ascending: false })
         .limit(10);
 
-      // Fetch coordinator assignment
-      const { data: coordinatorData } = await supabase
-        .rpc("get_coordinator_verification_by_auth", { 
-          // Need to get auth user ID first
-          auth_user_uuid: null 
-        });
+
 
       // Detect new signals
       const newSignals: any[] = [];

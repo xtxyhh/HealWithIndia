@@ -52,7 +52,7 @@ export async function POST(
       case 'acknowledge':
         updates.response_state = 'acknowledged';
         updates.acknowledged_at = now;
-        updates.response_operator_id = user.email;
+        updates.response_operator_id = user.id;
         if (safetyCase.status === 'open') {
           updates.status = 'acknowledged';
         }
@@ -62,7 +62,7 @@ export async function POST(
 
       case 'claim':
         updates.response_state = 'in_response';
-        updates.response_operator_id = user.email;
+        updates.response_operator_id = user.id;
         if (!safetyCase.acknowledged_at) {
           updates.acknowledged_at = now;
         }

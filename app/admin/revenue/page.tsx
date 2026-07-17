@@ -140,23 +140,37 @@ export default async function RevenuePage() {
               </tr>
             </thead>
             <tbody>
-              {patients.map(p => (
-                <tr key={p.id} className="border-b border-slate-800 hover:bg-slate-900/50 transition">
-                  <td className="px-6 py-5">
-                    <Link href={`/admin/patient/${p.id}`} className="font-semibold hover:text-blue-400">
-                      {p.full_name || "Unknown"}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-5 text-slate-300 text-sm">{p.country || "—"}</td>
-                  <td className="px-6 py-5 text-slate-300 text-sm">{p.treatment || "—"}</td>
-                  <td className="px-6 py-5">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300">
-                      {p.status || "New"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-green-400 font-semibold">${(p.estimated_revenue || 0).toLocaleString()}</td>
-                </tr>
-              ))}
+              {patients.map(p => {
+                let cost = p.estimated_revenue || 0;
+                let paid = p.estimated_revenue || 0;
+                try {
+                  const fin = JSON.parse(p.notes || "{}");
+                  if (fin.estimated_cost !== undefined) {
+                    cost = Number(fin.estimated_cost) || 0;
+                    paid = Number(fin.paid_amount) || 0;
+                  }
+                } catch (e) {}
+
+                return (
+                  <tr key={p.id} className="border-b border-slate-800 hover:bg-slate-900/50 transition">
+                    <td className="px-6 py-5">
+                      <Link href={`/admin/patient/${p.id}`} className="font-semibold hover:text-blue-400">
+                        {p.full_name || "Unknown"}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-5 text-slate-300 text-sm">{p.country || "—"}</td>
+                    <td className="px-6 py-5 text-slate-300 text-sm">{p.treatment || "—"}</td>
+                    <td className="px-6 py-5">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300">
+                        {p.status || "New"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-green-400 font-semibold">
+                      ${paid.toLocaleString()} <span className="text-slate-500 text-xs font-normal">/ ${cost.toLocaleString()}</span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -40,13 +40,29 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Cannot create super_admin via this endpoint" }, { status: 403 });
       }
 
-      // Check if auth user already exists for this email
-      const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-      const existingUser = existingUsers.users.find(u => u.email === email);
+      // Check if auth user already exists for this email in database
+      const { data: existingEmployee } = await serviceSupabase
+        .from("employees")
+        .select("auth_user_id")
+        .eq("email", email)
+        .maybeSingle();
 
-      if (existingUser) {
+      if (existingEmployee?.auth_user_id) {
         return NextResponse.json({ 
           error: "An auth account with this email already exists" 
+        }, { status: 409 });
+      }
+
+      // Check duplicate in patients table
+      const { data: existingPatient } = await serviceSupabase
+        .from("patients")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (existingPatient) {
+        return NextResponse.json({ 
+          error: "This email already belongs to a patient account." 
         }, { status: 409 });
       }
 
@@ -70,12 +86,19 @@ export async function POST(request: NextRequest) {
 
       const authUserId = newUser.user.id;
       
+      const requestUrl = new URL(request.url);
+      const inviteRedirectUrl = `${requestUrl.origin}/auth/callback?next=/reset-password`;
+
       // Send invite to the newly created user
-      const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(authUserId);
+      const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo: inviteRedirectUrl
+      });
       if (inviteError) {
-        console.error("Error sending invite to staff user:", inviteError);
+        console.error("Error sending invite to staff user, rolling back:", inviteError);
+        // Rollback orphaned auth user
+        await serviceSupabase.auth.admin.deleteUser(authUserId);
         return NextResponse.json({ 
-          error: "Auth account created but invite failed. Please retry.",
+          error: "Auth account created but invite failed. Creation has been rolled back.",
           details: inviteError.message
         }, { status: 500 });
       }
@@ -136,12 +159,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      const requestUrl = new URL(request.url);
+      const inviteRedirectUrl = `${requestUrl.origin}/auth/callback?next=/reset-password`;
+
       // Resend invite using Supabase Auth
-      const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(employee.auth_user_id);
+      const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(employee.email, {
+        redirectTo: inviteRedirectUrl
+      });
 
       if (inviteError) {
         console.error("Error resending staff invite:", inviteError);
-        return NextResponse.json({ error: "Failed to resend invite" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to resend invite", details: inviteError.message }, { status: 500 });
       }
 
       // Update invite timestamp and count
@@ -259,14 +287,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
-      // Also disable auth account
+      // Also disable auth account securely by banning
       if (employee.auth_user_id) {
         const { error: authError } = await serviceSupabase.auth.admin.updateUserById(
           employee.auth_user_id,
           {
-            user_metadata: {
-              disabled: true
-            }
+            ban_duration: "876600h" // Ban staff user for 100 years
           }
         );
 
@@ -312,14 +338,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
-      // Re-enable auth account
+      // Re-enable auth account by removing ban
       if (employee.auth_user_id) {
         const { error: authError } = await serviceSupabase.auth.admin.updateUserById(
           employee.auth_user_id,
           {
-            user_metadata: {
-              disabled: false
-            }
+            ban_duration: "none"
           }
         );
 

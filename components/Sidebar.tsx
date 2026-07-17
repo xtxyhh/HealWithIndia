@@ -109,7 +109,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      router.replace("/admin/login");
+      window.location.href = "/admin/login";
     } catch (error) {
       console.error("Logout error:", error);
     }

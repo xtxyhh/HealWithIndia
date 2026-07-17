@@ -31,12 +31,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const VALID_STATUSES = [
+      "New",
+      "Contacted",
+      "Consultation Scheduled",
+      "Treatment Started",
+      "Hospital Assigned",
+      "Converted",
+      "Completed",
+      "Cancelled"
+    ];
+
+    if (!VALID_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status value" },
+        { status: 400 }
+      );
+    }
+
+    const parsedId = Number(id);
+    if (isNaN(parsedId)) {
+      return NextResponse.json(
+        { error: "id must be a valid number" },
+        { status: 400 }
+      );
+    }
+
     // Use service role for the update operation
     const serviceSupabase = createServiceRoleClient();
     const { error } = await serviceSupabase
       .from("patients")
       .update({ status })
-      .eq("id", id);
+      .eq("id", parsedId);
 
     if (error) {
       return NextResponse.json(

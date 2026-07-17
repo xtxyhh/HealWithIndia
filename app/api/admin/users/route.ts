@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
         email: e.email,
         phone: e.phone || "",
         role: e.role,
-        status: e.role === "super_admin" ? "ACTIVE" : "ACTIVE", // can be suspended
+        status: e.portal_status || "ACTIVE",
         created_at: e.created_at,
         avatar: e.avatar,
-        auth_user_id: null // placeholder
+        auth_user_id: e.auth_user_id || null
       })),
       ...(patients || []).map(p => {
         const map = (mappings || []).find(m => m.patient_id === p.id);
@@ -149,11 +149,33 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Name, email, and role are required" }, { status: 400 });
       }
 
-      // Check duplicate email
-      const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-      const existingUser = existingUsers.users.find(u => u.email === email);
-      if (existingUser) {
-        return NextResponse.json({ error: "A user with this email already exists in Auth" }, { status: 409 });
+      // Validate role crossover and check duplicate email
+      const { data: existingEmployee } = await serviceSupabase
+        .from("employees")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      const { data: existingPatient } = await serviceSupabase
+        .from("patients")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (role === "patient") {
+        if (existingEmployee) {
+          return NextResponse.json({ error: "This email already belongs to a staff account." }, { status: 400 });
+        }
+        if (existingPatient) {
+          return NextResponse.json({ error: "A user with this email already exists" }, { status: 409 });
+        }
+      } else {
+        if (existingPatient) {
+          return NextResponse.json({ error: "This email already belongs to a patient account." }, { status: 400 });
+        }
+        if (existingEmployee) {
+          return NextResponse.json({ error: "A user with this email already exists" }, { status: 409 });
+        }
       }
 
       // 1. Create Auth User
@@ -239,6 +261,17 @@ export async function POST(request: NextRequest) {
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       } else {
+        // Query old email before updating employees
+        const { data: oldEmployee, error: findError } = await serviceSupabase
+          .from("employees")
+          .select("email, auth_user_id")
+          .eq("id", id)
+          .single();
+
+        if (findError) return NextResponse.json({ error: `Employee not found: ${findError.message}` }, { status: 404 });
+        const oldEmail = oldEmployee.email;
+        const authUserId = oldEmployee.auth_user_id;
+
         const { error } = await serviceSupabase
           .from("employees")
           .update({
@@ -252,15 +285,14 @@ export async function POST(request: NextRequest) {
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-        // Update auth metadata if exists
-        const { data: employee } = await serviceSupabase.from("employees").select("email").eq("id", id).single();
-        if (employee) {
-          const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-          const authUser = existingUsers.users.find(u => u.email === employee.email);
-          if (authUser) {
-            await serviceSupabase.auth.admin.updateUserById(authUser.id, {
-              app_metadata: { role }
-            });
+        // Update auth metadata and email if email changed and authUserId exists
+        if (authUserId) {
+          const { error: authUpdateError } = await serviceSupabase.auth.admin.updateUserById(authUserId, {
+            email: email,
+            app_metadata: { role }
+          });
+          if (authUpdateError) {
+            console.error("Failed to update staff auth user properties:", authUpdateError.message);
           }
         }
       }
@@ -274,14 +306,42 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
       }
 
-      const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-      const authUser = existingUsers.users.find(u => u.email === email);
+      // Find authUserId from CRM tables
+      let authUserId: string | null = null;
 
-      if (!authUser) {
+      const { data: employee } = await serviceSupabase
+        .from("employees")
+        .select("auth_user_id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (employee?.auth_user_id) {
+        authUserId = employee.auth_user_id;
+      } else {
+        const { data: patient } = await serviceSupabase
+          .from("patients")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (patient) {
+          const { data: mapping } = await serviceSupabase
+            .from("patient_auth_mapping")
+            .select("auth_user_id")
+            .eq("patient_id", patient.id)
+            .maybeSingle();
+
+          if (mapping) {
+            authUserId = mapping.auth_user_id;
+          }
+        }
+      }
+
+      if (!authUserId) {
         return NextResponse.json({ error: "Auth account not found for this email" }, { status: 404 });
       }
 
-      const { error } = await serviceSupabase.auth.admin.updateUserById(authUser.id, {
+      const { error } = await serviceSupabase.auth.admin.updateUserById(authUserId, {
         password
       });
 
@@ -294,21 +354,52 @@ export async function POST(request: NextRequest) {
 
     if (action === "suspend_user") {
       const { email } = userData;
-      const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-      const authUser = existingUsers.users.find(u => u.email === email);
 
-      if (authUser) {
-        await serviceSupabase.auth.admin.updateUserById(authUser.id, {
-          user_metadata: { disabled: true }
+      // Find authUserId from CRM tables
+      let authUserId: string | null = null;
+
+      const { data: employee } = await serviceSupabase
+        .from("employees")
+        .select("auth_user_id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (employee?.auth_user_id) {
+        authUserId = employee.auth_user_id;
+      } else {
+        const { data: patient } = await serviceSupabase
+          .from("patients")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (patient) {
+          const { data: mapping } = await serviceSupabase
+            .from("patient_auth_mapping")
+            .select("auth_user_id")
+            .eq("patient_id", patient.id)
+            .maybeSingle();
+
+          if (mapping) {
+            authUserId = mapping.auth_user_id;
+          }
+        }
+      }
+
+      if (authUserId) {
+        const { error: suspendError } = await serviceSupabase.auth.admin.updateUserById(authUserId, {
+          ban_duration: "876600h" // Ban user for 100 years
         });
+        if (suspendError) return NextResponse.json({ error: suspendError.message }, { status: 500 });
       }
 
       // Update mapping status for patients
       const { data: patient } = await serviceSupabase.from("patients").select("id").eq("email", email).maybeSingle();
       if (patient) {
-        await serviceSupabase.from("patient_auth_mapping").update({
+        const { error: mappingError } = await serviceSupabase.from("patient_auth_mapping").update({
           portal_access_status: "SUSPENDED"
         }).eq("patient_id", patient.id);
+        if (mappingError) return NextResponse.json({ error: mappingError.message }, { status: 500 });
       }
 
       return NextResponse.json({ message: "User suspended successfully" });
@@ -316,21 +407,52 @@ export async function POST(request: NextRequest) {
 
     if (action === "restore_user") {
       const { email } = userData;
-      const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-      const authUser = existingUsers.users.find(u => u.email === email);
 
-      if (authUser) {
-        await serviceSupabase.auth.admin.updateUserById(authUser.id, {
-          user_metadata: { disabled: false }
+      // Find authUserId from CRM tables
+      let authUserId: string | null = null;
+
+      const { data: employee } = await serviceSupabase
+        .from("employees")
+        .select("auth_user_id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (employee?.auth_user_id) {
+        authUserId = employee.auth_user_id;
+      } else {
+        const { data: patient } = await serviceSupabase
+          .from("patients")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (patient) {
+          const { data: mapping } = await serviceSupabase
+            .from("patient_auth_mapping")
+            .select("auth_user_id")
+            .eq("patient_id", patient.id)
+            .maybeSingle();
+
+          if (mapping) {
+            authUserId = mapping.auth_user_id;
+          }
+        }
+      }
+
+      if (authUserId) {
+        const { error: restoreError } = await serviceSupabase.auth.admin.updateUserById(authUserId, {
+          ban_duration: "none" // Remove ban
         });
+        if (restoreError) return NextResponse.json({ error: restoreError.message }, { status: 500 });
       }
 
       // Update mapping status for patients
       const { data: patient } = await serviceSupabase.from("patients").select("id").eq("email", email).maybeSingle();
       if (patient) {
-        await serviceSupabase.from("patient_auth_mapping").update({
+        const { error: mappingError } = await serviceSupabase.from("patient_auth_mapping").update({
           portal_access_status: "ACTIVE"
         }).eq("patient_id", patient.id);
+        if (mappingError) return NextResponse.json({ error: mappingError.message }, { status: 500 });
       }
 
       return NextResponse.json({ message: "User access restored successfully" });
@@ -340,17 +462,51 @@ export async function POST(request: NextRequest) {
       const { id, type, email } = userData;
 
       // Delete Auth User
-      const { data: existingUsers } = await serviceSupabase.auth.admin.listUsers();
-      const authUser = existingUsers.users.find(u => u.email === email);
-      if (authUser) {
-        await serviceSupabase.auth.admin.deleteUser(authUser.id);
+      // Find authUserId from CRM tables
+      let authUserId: string | null = null;
+
+      const { data: employee } = await serviceSupabase
+        .from("employees")
+        .select("auth_user_id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (employee?.auth_user_id) {
+        authUserId = employee.auth_user_id;
+      } else {
+        const { data: patient } = await serviceSupabase
+          .from("patients")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (patient) {
+          const { data: mapping } = await serviceSupabase
+            .from("patient_auth_mapping")
+            .select("auth_user_id")
+            .eq("patient_id", patient.id)
+            .maybeSingle();
+
+          if (mapping) {
+            authUserId = mapping.auth_user_id;
+          }
+        }
+      }
+
+      if (authUserId) {
+        const { error: authDelError } = await serviceSupabase.auth.admin.deleteUser(authUserId);
+        if (authDelError) return NextResponse.json({ error: authDelError.message }, { status: 500 });
       }
 
       if (type === "patient") {
-        await serviceSupabase.from("patient_auth_mapping").delete().eq("patient_id", id);
-        await serviceSupabase.from("patients").delete().eq("id", id);
+        const { error: mappingDelError } = await serviceSupabase.from("patient_auth_mapping").delete().eq("patient_id", id);
+        if (mappingDelError) return NextResponse.json({ error: mappingDelError.message }, { status: 500 });
+
+        const { error: patientDelError } = await serviceSupabase.from("patients").delete().eq("id", id);
+        if (patientDelError) return NextResponse.json({ error: patientDelError.message }, { status: 500 });
       } else {
-        await serviceSupabase.from("employees").delete().eq("id", id);
+        const { error: employeeDelError } = await serviceSupabase.from("employees").delete().eq("id", id);
+        if (employeeDelError) return NextResponse.json({ error: employeeDelError.message }, { status: 500 });
       }
 
       return NextResponse.json({ message: "User deleted successfully" });

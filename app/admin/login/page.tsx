@@ -45,7 +45,17 @@ function AdminLoginContent() {
         return;
       }
 
-      // Let middleware verify admin role server-side
+      const user = data.user;
+      const role = user?.app_metadata?.role;
+      const isStaff = user?.user_metadata?.is_staff === true || (role && role !== "patient");
+
+      if (!isStaff) {
+        await supabase.auth.signOut();
+        setError("You do not have permission to access the Admin Portal. This login is for HealWithIndia administrators only.");
+        setLoading(false);
+        return;
+      }
+
       router.replace("/admin");
     } catch {
       setError("Something went wrong.");

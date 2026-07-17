@@ -63,23 +63,11 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
     
-    // Verify admin role from app_metadata
+    // Verify admin role from app_metadata and user_metadata
     const role = user.app_metadata?.role;
-    // All CRM staff roles — sidebar filters what each role can see
-    const allowedRoles = [
-      'admin',
-      'super_admin',
-      'safety_operator',
-      'coordinator',
-      'doctor',
-      'reception',
-      'finance',
-      'support',
-      'hospital_partner',
-    ];
-    const isAuthorized = allowedRoles.includes(role);
+    const isStaff = user.user_metadata?.is_staff === true || (role && role !== "patient");
     
-    if (!isAuthorized) {
+    if (!isStaff) {
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('error', 'unauthorized');
       return redirectWithCookies(loginUrl, response);

@@ -10,8 +10,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { createServiceRoleClient } = await import("@/lib/supabaseServer");
+    const serviceSupabase = createServiceRoleClient();
+
     // Update portal access status to ACTIVE if currently INVITE_PENDING
-    const { error } = await supabase
+    const { error } = await serviceSupabase
       .from("patient_auth_mapping")
       .update({
         portal_access_status: "ACTIVE"
@@ -21,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Error transitioning portal status:", error);
-      // Don't fail the login if this update fails - it's non-critical
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

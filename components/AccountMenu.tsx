@@ -23,12 +23,7 @@ export default function AccountMenu() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      // Redirect based on user role
-      if (isAdmin) {
-        router.replace("/login");
-      } else {
-        router.replace("/patient-login");
-      }
+      window.location.href = isAdmin ? "/admin/login" : "/patient-login";
     } catch (error) {
       console.error("Logout error:", error);
     }

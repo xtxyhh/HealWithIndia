@@ -19,7 +19,7 @@ Lock,
 
 } from "lucide-react";
 
-import { createClient } from "@/lib/supabaseServer";
+import { createClient, createServiceRoleClient } from "@/lib/supabaseServer";
 import PatientControls from "./PatientControls";
 
 
@@ -75,12 +75,48 @@ const { data: portalAccess } = await supabase
   .eq("patient_id", parseInt(id))
   .single();
 
+// Fetch auth user last login via service role
+let authLastLogin: string | null = null;
+let authCreatedAt: string | null = null;
+if (portalAccess?.auth_user_id) {
+  const serviceSupabase = createServiceRoleClient();
+  const { data: authUserData } = await serviceSupabase.auth.admin.getUserById(portalAccess.auth_user_id);
+  authLastLogin = authUserData?.user?.last_sign_in_at || null;
+  authCreatedAt = authUserData?.user?.created_at || null;
+}
+
 // Fetch protection status
 const { data: protectionStatus } = await supabase
   .from("patient_safety_profiles")
   .select("*")
   .eq("patient_id", parseInt(id))
   .single();
+
+// Fetch all hospitals
+const { data: hospitals } = await supabase
+  .from("hospitals")
+  .select("id, name");
+
+// Fetch all coordinators
+const { data: coordinators } = await supabase
+  .from("official_coordinators")
+  .select("id, full_name, reference_id");
+
+// Fetch active coordinator assignment
+const { data: coordinatorAssignment } = await supabase
+  .from("coordinator_assignments")
+  .select("coordinator_id")
+  .eq("patient_id", parseInt(id))
+  .eq("is_active", true)
+  .maybeSingle();
+
+// Fetch active risk level
+const { data: riskLevelData } = await supabase
+  .from("risk_assessments")
+  .select("risk_level")
+  .eq("patient_id", parseInt(id))
+  .eq("is_current", true)
+  .maybeSingle();
 
 // Parse financials from notes JSON
 let estimatedCost = patient?.estimated_revenue || 0;
@@ -103,6 +139,100 @@ try {
 const remainingAmount = estimatedCost - paidAmount;
 const paidPercent = estimatedCost > 0 ? Math.round((paidAmount / estimatedCost) * 100) : 0;
 const pendingPercent = estimatedCost > 0 ? Math.round((remainingAmount / estimatedCost) * 100) : 0;
+
+// --- DYNAMIC TIMELINE ---
+const journeyStage = protectionStatus?.journey_stage || "initial";
+const journeyStageOrder = ["initial", "visa_processing", "travel_confirmed", "arrived", "treatment_in_progress", "discharged", "follow_up", "completed"];
+const currentStageIndex = journeyStageOrder.indexOf(journeyStage);
+const fmt = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null;
+
+type TimelineStatus = "done" | "active" | "pending";
+interface TimelineEvent { label: string; description: string; date: string | null; status: TimelineStatus; }
+
+const timelineEvents: TimelineEvent[] = [
+  {
+    label: "Lead Created",
+    description: "Patient record added to CRM.",
+    date: fmt(patient?.created_at),
+    status: patient?.created_at ? "done" : "pending",
+  },
+  {
+    label: "Coordinator Assigned",
+    description: "Dedicated coordinator assigned to patient.",
+    date: coordinatorAssignment?.coordinator_id ? fmt(patient?.created_at) : null,
+    status: coordinatorAssignment?.coordinator_id ? "done" : "pending",
+  },
+  {
+    label: "Hospital Assigned",
+    description: "Partner hospital confirmed for treatment.",
+    date: patient?.assigned_hospital ? fmt(patient?.created_at) : null,
+    status: patient?.assigned_hospital ? "done" : "pending",
+  },
+  {
+    label: "Portal Enabled",
+    description: "Patient portal access provisioned.",
+    date: fmt(portalAccess?.portal_access_enabled_at),
+    status: portalAccess?.portal_access_enabled_at ? "done" : "pending",
+  },
+  {
+    label: "Invite Sent",
+    description: "Welcome email with setup link dispatched.",
+    date: fmt(portalAccess?.invite_sent_at),
+    status: portalAccess?.invite_sent_at ? "done" : "pending",
+  },
+  {
+    label: "Password Created",
+    description: "Patient set their login password.",
+    date: authCreatedAt ? fmt(authCreatedAt) : null,
+    status: ["ACTIVE", "SUSPENDED"].includes(portalAccess?.portal_access_status || "") ? "done" : "pending",
+  },
+  {
+    label: "First Login",
+    description: "Patient accessed their portal for the first time.",
+    date: fmt(authLastLogin),
+    status: authLastLogin ? "done" : "pending",
+  },
+  {
+    label: "Protection Activated",
+    description: "Smart Tourist Protection shield engaged.",
+    date: fmt(protectionStatus?.protection_activated_at),
+    status: protectionStatus?.protection_activated_at ? "done" : "pending",
+  },
+  {
+    label: "Travel",
+    description: "Patient departed for India.",
+    date: currentStageIndex >= journeyStageOrder.indexOf("travel_confirmed") ? fmt(patient?.created_at) : null,
+    status: currentStageIndex >= journeyStageOrder.indexOf("travel_confirmed") ? "done" : "pending",
+  },
+  {
+    label: "Treatment",
+    description: "Medical treatment commenced at partner hospital.",
+    date: currentStageIndex >= journeyStageOrder.indexOf("treatment_in_progress") ? fmt(patient?.created_at) : null,
+    status: currentStageIndex >= journeyStageOrder.indexOf("treatment_in_progress") ? "done" : "pending",
+  },
+  {
+    label: "Recovery",
+    description: "Patient discharged, entering recovery phase.",
+    date: currentStageIndex >= journeyStageOrder.indexOf("discharged") ? fmt(patient?.created_at) : null,
+    status: currentStageIndex >= journeyStageOrder.indexOf("discharged") ? "done" : "pending",
+  },
+  {
+    label: "Follow-up",
+    description: "Post-treatment follow-up consultations.",
+    date: currentStageIndex >= journeyStageOrder.indexOf("follow_up") ? fmt(patient?.created_at) : null,
+    status: currentStageIndex >= journeyStageOrder.indexOf("follow_up") ? "done" : "pending",
+  },
+  {
+    label: "Journey Completed",
+    description: "Full medical journey successfully concluded.",
+    date: fmt(protectionStatus?.protection_completed_at),
+    status: protectionStatus?.protection_completed_at || journeyStage === "completed" ? "done" : "pending",
+  },
+];
+// Find the first pending milestone and mark it as active
+const firstPendingIdx = timelineEvents.findIndex(e => e.status === "pending");
+if (firstPendingIdx !== -1) timelineEvents[firstPendingIdx].status = "active";
+// --- END DYNAMIC TIMELINE ---
 
 
 
@@ -910,73 +1040,44 @@ patient.email
 
 
 
-<div
-
-className="
-
-rounded-[30px]
-
-border
-
-border-yellow-500/20
-
-bg-yellow-500/10
-
-backdrop-blur-3xl
-
-p-8
-
-"
-
+<a
+  href="#edit-details"
+  className="
+  rounded-[30px]
+  border
+  border-yellow-500/20
+  bg-yellow-500/10
+  backdrop-blur-3xl
+  p-8
+  cursor-pointer
+  hover:bg-yellow-500/20
+  transition-all
+  "
 >
+  <Edit
+    size={30}
+    className="text-yellow-400"
+  />
 
-<Edit
+  <h3
+    className="
+    text-2xl
+    font-bold
+    mt-8
+    "
+  >
+    Edit
+  </h3>
 
-size={30}
-
-className="text-yellow-400"
-
-/>
-
-
-
-<h3
-
-className="
-
-text-2xl
-
-font-bold
-
-mt-8
-
-"
-
->
-
-Edit
-
-</h3>
-
-
-
-<p
-
-className="
-
-text-slate-300
-
-mt-3
-
-"
-
->
-
-Update Details
-
-</p>
-
-</div>
+  <p
+    className="
+    text-slate-300
+    mt-3
+    "
+  >
+    Update Details
+  </p>
+</a>
 
 
 
@@ -1505,6 +1606,16 @@ patient.notes
   portalAccess={portalAccess}
   protectionStatus={protectionStatus}
   financials={{ estimatedCost, paidAmount, currency, invoiceStatus, notesText }}
+  hospitals={hospitals || []}
+  coordinators={coordinators || []}
+  assignedCoordinatorId={coordinatorAssignment?.coordinator_id || "none"}
+  riskLevel={riskLevelData?.risk_level || "normal"}
+  journeyStage={protectionStatus?.journey_stage || "initial"}
+  patientName={patient.full_name}
+  patientPhone={patient.phone}
+  patientCountry={patient.country}
+  patientTreatment={patient.treatment}
+  assignedHospital={patient.assigned_hospital}
 />
 
 
@@ -1715,21 +1826,7 @@ mt-10
 
 {
 
-[
-
-"Lead Created",
-
-"Consultation",
-
-"Hospital Assigned",
-
-"Treatment Started",
-
-"Recovery"
-
-]
-
-.map((step,index)=>(
+timelineEvents.map((event, index) => (
 
 
 
@@ -1757,7 +1854,7 @@ gap-5
 
 <div
 
-className="
+className={`
 
 h-5
 
@@ -1765,9 +1862,11 @@ w-5
 
 rounded-full
 
-bg-blue-500
+border-2
 
-"
+${event.status === 'done' ? 'bg-blue-500 border-blue-500' : event.status === 'active' ? 'bg-transparent border-blue-400 ring-4 ring-blue-400/20' : 'bg-transparent border-slate-700'}
+
+`}
 
 />
 
@@ -1775,13 +1874,13 @@ bg-blue-500
 
 {
 
-index!==4
+index !== timelineEvents.length - 1
 
 &&
 
 <div
 
-className="
+className={`
 
 absolute
 
@@ -1793,9 +1892,9 @@ w-[2px]
 
 h-[70px]
 
-bg-slate-800
+${event.status === 'done' ? 'bg-blue-500/40' : 'bg-slate-800'}
 
-"
+`}
 
 />
 
@@ -1815,17 +1914,19 @@ bg-slate-800
 
 <h3
 
-className="
+className={`
 
 font-semibold
 
 text-lg
 
-"
+${event.status === 'done' ? 'text-white' : event.status === 'active' ? 'text-blue-400' : 'text-slate-500'}
+
+`}
 
 >
 
-{step}
+{event.label}
 
 </h3>
 
@@ -1837,15 +1938,35 @@ className="
 
 text-slate-500
 
-mt-2
+text-sm
+
+mt-1
 
 "
 
 >
 
-Completed
+{event.description}
 
 </p>
+
+
+
+{event.date && (
+<p className="text-slate-600 text-xs mt-1 font-mono">{event.date}</p>
+)}
+
+{event.status === 'active' && (
+<span className="inline-block mt-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/25">In Progress</span>
+)}
+
+{event.status === 'pending' && (
+<span className="inline-block mt-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full bg-slate-800 text-slate-600 border border-slate-700">Pending</span>
+)}
+
+{event.status === 'done' && (
+<span className="inline-block mt-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full bg-green-500/10 text-green-400 border border-green-500/20">Completed</span>
+)}
 
 </div>
 

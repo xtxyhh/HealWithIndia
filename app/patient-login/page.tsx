@@ -42,6 +42,7 @@ function PatientLoginContent() {
 
     try {
       setLoading(true);
+      console.log("[PATIENT LOGIN] Step 10: Submitting login credentials to Supabase Auth for email:", email);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -49,24 +50,72 @@ function PatientLoginContent() {
       });
 
       if (error) {
+        console.error("[PATIENT LOGIN] Step 10: Authentication failed:", error.message);
         setError(error.message);
         setLoading(false);
         return;
       }
 
-      // Transition from INVITE_PENDING to ACTIVE on first successful login
-      // This is a server-side API call that will handle auth context properly
-      try {
-        await fetch('/api/safety/transition-portal-active', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } catch (transitionError) {
-        // Transition failure is non-critical - allow login to proceed
-        console.error('Transition warning:', transitionError);
+      const user = data.user;
+      console.log("[PATIENT LOGIN] Step 10: Authentication succeeded. User ID:", user.id);
+
+      // Block staff from patient portal
+      const role = user?.app_metadata?.role;
+      const isStaff = user?.user_metadata?.is_staff === true || (role && role !== "patient");
+      if (isStaff) {
+        await supabase.auth.signOut();
+        setError("This portal is for patients only. Please log in at the Admin Portal.");
+        setLoading(false);
+        return;
       }
 
-      // Let middleware verify patient portal access server-side
+      // Fetch portal access status from database (single source of truth)
+      const { data: mapping, error: mapError } = await supabase
+        .from("patient_auth_mapping")
+        .select("portal_access_status")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+
+      if (mapError || !mapping) {
+        await supabase.auth.signOut();
+        setError("Patient portal access is not enabled for this account.");
+        setLoading(false);
+        return;
+      }
+
+      const status = mapping.portal_access_status;
+
+      if (status === "NOT_ENABLED") {
+        await supabase.auth.signOut();
+        setError("Patient portal access has not been enabled for this account. Please contact your coordinator.");
+        setLoading(false);
+        return;
+      }
+
+      if (status === "INVITE_PENDING") {
+        await supabase.auth.signOut();
+        setError("Your invitation is pending. Please click the link in your email to set up your password first.");
+        setLoading(false);
+        return;
+      }
+
+      if (status === "SUSPENDED") {
+        await supabase.auth.signOut();
+        setError("Your patient portal access has been suspended. Please contact your coordinator.");
+        setLoading(false);
+        return;
+      }
+
+      // Transition state if active
+      if (status === "ACTIVE") {
+        try {
+          await fetch('/api/safety/transition-portal-active', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } catch (e) {}
+      }
+
       router.replace("/safety");
     } catch {
       setError("Something went wrong.");

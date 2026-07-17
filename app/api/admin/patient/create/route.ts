@@ -36,19 +36,34 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = createServiceRoleClient();
 
-    // Check for duplicate email
-    const { data: existing } = await serviceSupabase
+    // Check for duplicate email in patients
+    const { data: existingPatient } = await serviceSupabase
       .from("patients")
       .select("id")
       .eq("email", email)
       .maybeSingle();
 
-    if (existing) {
+    if (existingPatient) {
       return NextResponse.json(
         { error: "A patient with this email already exists" },
         { status: 409 }
       );
     }
+
+    // Check if email already belongs to a staff account in employees table
+    const { data: existingEmployee } = await serviceSupabase
+      .from("employees")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingEmployee) {
+      return NextResponse.json(
+        { error: "This email already belongs to a staff account." },
+        { status: 400 }
+      );
+    }
+
 
     // Insert patient CRM record
     const { data: patient, error: insertError } = await serviceSupabase
