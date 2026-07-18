@@ -383,7 +383,58 @@ export async function POST(request: NextRequest) {
         redirectTo: inviteRedirectUrl
       });
       inviteError = res.error;
-      console.log("[ROUTE-TRACE 35] After serviceSupabase.auth.admin.inviteUserByEmail() successfully");
+      console.log("[ROUTE-TRACE 34.5] inviteUserByEmail result: error=", inviteError?.message, "| status=", (inviteError as any)?.status, "| code=", (inviteError as any)?.code);
+
+      // Handle the case where the user already has a confirmed account (422 email_exists).
+      // inviteUserByEmail only works for accounts that have never been confirmed.
+      // For existing confirmed users (e.g. the same email is also an admin account),
+      // send a password recovery email via the GoTrue /recover endpoint instead.
+      // This email has the same effect: the patient clicks the link, sets a password,
+      // and gains access to their portal.
+      if (
+        inviteError &&
+        ((inviteError as any)?.status === 422 ||
+          (inviteError as any)?.code === 'email_exists' ||
+          inviteError.message?.toLowerCase().includes('already'))
+      ) {
+        console.log("[ROUTE-TRACE 34.6] inviteUserByEmail returned email_exists — falling back to /recover REST call");
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        let recoverFailed = false;
+        try {
+          const recoverResponse = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': serviceRoleKey,
+              'Authorization': `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({
+              email: patient.email,
+              redirect_to: inviteRedirectUrl,
+            }),
+          });
+          const recoverBody = await recoverResponse.text();
+          console.log("[ROUTE-TRACE 34.7] /recover response status:", recoverResponse.status, "body:", recoverBody);
+          if (!recoverResponse.ok) {
+            console.error("[ROUTE-TRACE 34.8] /recover endpoint returned non-OK:", recoverResponse.status, recoverBody);
+            // Recovery email failed — keep inviteError set so rollback runs below
+            recoverFailed = true;
+          }
+        } catch (fetchErr: any) {
+          console.error("[ROUTE-TRACE 34.8] /recover fetch threw:", fetchErr?.message);
+          recoverFailed = true;
+        }
+
+        if (!recoverFailed) {
+          // Recovery email sent — treat as success, clear inviteError
+          console.log("[ROUTE-TRACE 34.9] Recovery email sent successfully — email_exists resolved");
+          inviteError = null;
+        }
+        // If recoverFailed is true, inviteError remains set and rollback runs below
+      }
+
+      console.log("[ROUTE-TRACE 35] After invite/recovery flow. inviteError=", inviteError?.message ?? "none");
       lastCompletedStep = "STEP 7 - inviteUserByEmail";
     } catch (err: any) {
       console.error("[ROUTE-TRACE ERROR] inviteUserByEmail invocation failed:", err);
@@ -417,7 +468,7 @@ export async function POST(request: NextRequest) {
         }
         if (isNewUserCreated) {
           console.log("[ROUTE-TRACE 35.3] Deleting rollback user because invite failed");
-          await serviceSupabase.auth.admin.deleteUser(authUserId);
+          await serviceSupabase.auth.admin.deleteUser(authUserId!);
         }
         return NextResponse.json({ error: `Invite email could not be sent: ${inviteError.message}` }, { status: 500 });
       }
