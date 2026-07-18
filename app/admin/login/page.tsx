@@ -49,6 +49,16 @@ function AdminLoginContent() {
       const role = user?.app_metadata?.role;
       const isStaff = user?.user_metadata?.is_staff === true || (role && role !== "patient");
 
+      console.log("[TEMPORARY AUDIT LOG] Login successful");
+      console.log("[TEMPORARY AUDIT LOG] user.id:", user?.id);
+      console.log("[TEMPORARY AUDIT LOG] email:", user?.email);
+      console.log("[TEMPORARY AUDIT LOG] role:", role);
+      console.log("[TEMPORARY AUDIT LOG] user_metadata:", JSON.stringify(user?.user_metadata));
+      console.log("[TEMPORARY AUDIT LOG] app_metadata:", JSON.stringify(user?.app_metadata));
+      console.log("[TEMPORARY AUDIT LOG] session exists:", !!data.session);
+      console.log("[TEMPORARY AUDIT LOG] access_token exists:", !!data.session?.access_token);
+      console.log("[TEMPORARY AUDIT LOG] refresh_token exists:", !!data.session?.refresh_token);
+
       if (!isStaff) {
         await supabase.auth.signOut();
         setError("You do not have permission to access the Admin Portal. This login is for HealWithIndia administrators only.");
@@ -56,6 +66,7 @@ function AdminLoginContent() {
         return;
       }
 
+      console.log("[TEMPORARY AUDIT LOG] Redirecting to /admin");
       router.replace("/admin");
     } catch {
       setError("Something went wrong.");
