@@ -3,7 +3,10 @@ import { createClient } from "@/lib/supabaseServer";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
 
+console.log("[RUNTIME LOG] Imported helper");
+
 export async function POST(request: NextRequest) {
+  console.log("[RUNTIME LOG] Entered route");
   let lastCompletedStep = "None";
   try {
     // STEP 1 - get authenticated user
@@ -398,19 +401,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
   } catch (error: any) {
-    console.error("[PORTAL ACCESS ROUTE EXCEPTION] Caught error:");
-    console.error(error);
-    if (error && error.stack) {
-      console.error(error.stack);
-    }
-    if (error && error.message) {
-      console.error(error.message);
-    }
+    console.error("[PORTAL ACCESS ROUTE EXCEPTION] Caught error:", {
+      message: error?.message,
+      stack: error?.stack,
+      cause: error?.cause,
+      constructorName: error?.constructor?.name,
+      file: "app/api/admin/patient/portal-access/route.ts"
+    });
     return NextResponse.json({ 
       success: false,
       step: lastCompletedStep,
       message: error?.message || String(error),
-      stack: error?.stack
+      stack: error?.stack || null,
+      cause: error?.cause || null,
+      constructorName: error?.constructor?.name || null,
+      file: "app/api/admin/patient/portal-access/route.ts"
     }, { status: 500 });
   }
 }

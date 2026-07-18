@@ -22,38 +22,70 @@ export async function proxy(request: NextRequest) {
     request,
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+  console.log("[RUNTIME LOG] [proxy.ts] env check BEFORE createServerClient:", {
+    URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    ANON: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SERVICE: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  });
+  console.log("[RUNTIME LOG] [proxy.ts] runtime check:", {
+    VERCEL: process.env.VERCEL,
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_RUNTIME: process.env.NEXT_RUNTIME,
+    VERCEL_ENV: process.env.VERCEL_ENV
+  });
+  console.log("[RUNTIME LOG] [proxy.ts] deployment check:", {
+    BUILD_ID: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'unknown',
+    COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
+    DEPLOYMENT_URL: process.env.VERCEL_URL || 'unknown'
+  });
+
+  console.log("[CREATE PROXY SERVER CLIENT] BEFORE");
+  let supabase;
+  try {
+    supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(
+            name: string,
+            value: string,
+            options: Record<string, unknown>
+          ) {
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(
+            name: string,
+            options: Record<string, unknown>
+          ) {
+            response.cookies.set({
+              name,
+              value: "",
+              ...options,
+            });
+          },
         },
-        set(
-          name: string,
-          value: string,
-          options: Record<string, unknown>
-        ) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(
-          name: string,
-          options: Record<string, unknown>
-        ) {
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-        },
-      },
-    }
-  );
+      }
+    );
+    console.log("[CREATE PROXY SERVER CLIENT] AFTER");
+  } catch (error: any) {
+    console.error("[CREATE PROXY SERVER CLIENT] ERROR THROWN:", {
+      message: error?.message,
+      stack: error?.stack,
+      cause: error?.cause,
+      constructorName: error?.constructor?.name,
+      file: "proxy.ts",
+      line: 60
+    });
+    throw error;
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
   console.log("[TEMPORARY AUDIT LOG proxy.ts] getUser() user resolved:", !!user);
