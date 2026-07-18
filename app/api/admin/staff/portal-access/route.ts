@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
@@ -66,7 +67,10 @@ export async function POST(request: NextRequest) {
         }, { status: 409 });
       }
 
-      // Create new auth user with invite
+      // Create new auth user with invite or resolve existing
+      let authUserId: string | null = null;
+      let isNewUserCreated = false;
+
       const { data: newUser, error: createError } = await serviceSupabase.auth.admin.createUser({
         email,
         email_confirm: false,
@@ -79,26 +83,89 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      if (createError || !newUser) {
+      if (newUser && newUser.user && !createError) {
+        authUserId = newUser.user.id;
+        isNewUserCreated = true;
+      } else if (
+        createError &&
+        (createError.message.includes("already exists") ||
+          createError.message.includes("already registered") ||
+          createError.status === 422 ||
+          createError.status === 400)
+      ) {
+        console.log("Staff user already exists in auth, resolving ID...");
+        const { data: existingUsers, error: listError } = await serviceSupabase.auth.admin.listUsers();
+        if (listError) {
+          console.error("Error listing users to resolve existing staff:", listError);
+          return NextResponse.json({ error: `Failed to resolve auth user: ${listError.message}` }, { status: 500 });
+        }
+        const foundUser = existingUsers?.users?.find((u: any) => u.email === email);
+        if (foundUser) {
+          authUserId = foundUser.id;
+          console.log("Resolved existing staff authUserId:", authUserId);
+        }
+      } else {
         console.error("Error creating staff auth user:", createError);
-        return NextResponse.json({ error: "Failed to create staff auth user" }, { status: 500 });
+        return NextResponse.json({ error: `Failed to create staff auth user: ${createError?.message}` }, { status: 500 });
       }
 
-      const authUserId = newUser.user.id;
+      if (!authUserId) {
+        return NextResponse.json({ error: "Failed to resolve or create auth account for staff" }, { status: 500 });
+      }
       
       const requestUrl = new URL(request.url);
       const inviteRedirectUrl = `${requestUrl.origin}/auth/callback?next=/reset-password`;
 
       // Send invite to the newly created user
-      const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(email, {
+      let { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(email, {
         redirectTo: inviteRedirectUrl
       });
+
+      if (
+        inviteError &&
+        ((inviteError as any)?.status === 422 ||
+          (inviteError as any)?.code === 'email_exists' ||
+          inviteError.message?.toLowerCase().includes('already'))
+      ) {
+        console.log("inviteUserByEmail returned email_exists — falling back to /recover REST call for staff");
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        let recoverFailed = false;
+        try {
+          const recoverResponse = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': serviceRoleKey,
+              'Authorization': `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({
+              email: email,
+              redirect_to: inviteRedirectUrl,
+            }),
+          });
+          const recoverBody = await recoverResponse.text();
+          console.log("/recover response status:", recoverResponse.status, "body:", recoverBody);
+          if (!recoverResponse.ok) {
+            recoverFailed = true;
+          }
+        } catch (fetchErr: any) {
+          console.error("/recover fetch threw error:", fetchErr?.message);
+          recoverFailed = true;
+        }
+
+        if (!recoverFailed) {
+          inviteError = null;
+        }
+      }
+
       if (inviteError) {
         console.error("Error sending invite to staff user, rolling back:", inviteError);
-        // Rollback orphaned auth user
-        await serviceSupabase.auth.admin.deleteUser(authUserId);
+        if (isNewUserCreated) {
+          await serviceSupabase.auth.admin.deleteUser(authUserId);
+        }
         return NextResponse.json({ 
-          error: "Auth account created but invite failed. Creation has been rolled back.",
+          error: "Auth account created/resolved but invite/recovery failed.",
           details: inviteError.message
         }, { status: 500 });
       }
@@ -163,9 +230,47 @@ export async function POST(request: NextRequest) {
       const inviteRedirectUrl = `${requestUrl.origin}/auth/callback?next=/reset-password`;
 
       // Resend invite using Supabase Auth
-      const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(employee.email, {
+      let { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(employee.email, {
         redirectTo: inviteRedirectUrl
       });
+
+      if (
+        inviteError &&
+        ((inviteError as any)?.status === 422 ||
+          (inviteError as any)?.code === 'email_exists' ||
+          inviteError.message?.toLowerCase().includes('already'))
+      ) {
+        console.log("Resend invite returned email_exists — falling back to /recover REST call for staff");
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        let recoverFailed = false;
+        try {
+          const recoverResponse = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': serviceRoleKey,
+              'Authorization': `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({
+              email: employee.email,
+              redirect_to: inviteRedirectUrl,
+            }),
+          });
+          const recoverBody = await recoverResponse.text();
+          console.log("/recover response status:", recoverResponse.status, "body:", recoverBody);
+          if (!recoverResponse.ok) {
+            recoverFailed = true;
+          }
+        } catch (fetchErr: any) {
+          console.error("/recover fetch threw error:", fetchErr?.message);
+          recoverFailed = true;
+        }
+
+        if (!recoverFailed) {
+          inviteError = null;
+        }
+      }
 
       if (inviteError) {
         console.error("Error resending staff invite:", inviteError);
