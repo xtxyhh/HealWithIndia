@@ -1,9 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { revalidatePath } from "next/cache";
-
-console.log("[RUNTIME LOG] Imported helper");
+console.log("[MODULE EVALUATION] START - app/api/admin/patient/portal-access/route.ts");
+console.log("[MODULE EVALUATION] env details:", {
+  VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
+  VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+  VERCEL_URL: process.env.VERCEL_URL,
+  __filename: typeof __filename !== 'undefined' ? __filename : 'unknown',
+  cwd: process.cwd()
+});
+console.log("[MODULE EVALUATION] SUCCESS - app/api/admin/patient/portal-access/route.ts");
 
 export async function POST(request: NextRequest) {
   console.log("[ROUTE-TRACE 1] Entered POST handler function body");
@@ -554,27 +562,35 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "resend") {
+      console.log("[POST RESEND] START");
+      console.log("[POST RESEND 1] Before serviceSupabase.from('patient_auth_mapping').select().single()");
       const { data: mapping, error: mappingError } = await serviceSupabase
         .from("patient_auth_mapping")
         .select("*")
         .eq("patient_id", patient_id)
         .single();
+      console.log("[POST RESEND 2] Mapping query completed, hasMapping:", !!mapping, "error:", mappingError?.message);
 
       if (mappingError || !mapping) {
+        console.log("[POST RESEND 2.1] Error: Portal access not found");
         return NextResponse.json({ error: "Portal access not found" }, { status: 404 });
       }
 
       if (mapping.portal_access_status !== "INVITE_PENDING") {
+        console.log("[POST RESEND 2.2] Error: Can only resend invite for pending status, current status:", mapping.portal_access_status);
         return NextResponse.json({ error: "Can only resend invite for pending status" }, { status: 400 });
       }
 
+      console.log("[POST RESEND 3] Before serviceSupabase.from('patients').select().single()");
       const { data: patient, error: patientError } = await serviceSupabase
         .from("patients")
         .select("email")
         .eq("id", patient_id)
         .single();
+      console.log("[POST RESEND 4] Patient query completed, hasEmail:", !!patient?.email, "error:", patientError?.message);
 
       if (patientError || !patient || !patient.email) {
+        console.log("[POST RESEND 4.1] Error: Patient email not found");
         return NextResponse.json({ error: "Patient email not found" }, { status: 404 });
       }
 
@@ -584,6 +600,7 @@ export async function POST(request: NextRequest) {
         const cooldownMs = 5 * 60 * 1000;
         
         if (currentTime - lastInviteTime < cooldownMs) {
+          console.log("[POST RESEND 4.2] Error: Cooldown active. Last invite at:", mapping.invite_sent_at);
           return NextResponse.json({ 
             error: "Please wait 5 minutes before resending invite" 
           }, { status: 429 });
@@ -593,14 +610,53 @@ export async function POST(request: NextRequest) {
       const requestUrl = new URL(request.url);
       const inviteRedirectUrl = `${requestUrl.origin}/auth/callback?next=/reset-password`;
 
+      console.log("[POST RESEND 5] Before serviceSupabase.auth.admin.inviteUserByEmail()");
       const { error: inviteError } = await serviceSupabase.auth.admin.inviteUserByEmail(patient.email, {
         redirectTo: inviteRedirectUrl
       });
+      console.log("[POST RESEND 6] Invite user completed, error:", inviteError?.message);
 
       if (inviteError) {
-        return NextResponse.json({ error: "Failed to resend invite", details: inviteError.message }, { status: 500 });
+        console.log("[POST RESEND 6.1] Invite error occurred. Trying recovery fallback if email exists.");
+        if ((inviteError as any)?.status === 422 || (inviteError as any)?.code === 'email_exists' || inviteError.message?.toLowerCase().includes('already')) {
+          console.log("[POST RESEND 6.2] Falling back to direct /recover call");
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+          const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+          let recoverFailed = false;
+          try {
+            const recoverResponse = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': serviceRoleKey,
+                'Authorization': `Bearer ${serviceRoleKey}`,
+              },
+              body: JSON.stringify({
+                email: patient.email,
+                redirect_to: inviteRedirectUrl,
+              }),
+            });
+            const recoverBody = await recoverResponse.text();
+            console.log("[POST RESEND 6.3] /recover response status:", recoverResponse.status, "body:", recoverBody);
+            if (!recoverResponse.ok) {
+              recoverFailed = true;
+            }
+          } catch (fetchErr: any) {
+            console.error("[POST RESEND 6.4] /recover fetch threw:", fetchErr?.message);
+            recoverFailed = true;
+          }
+
+          if (!recoverFailed) {
+            console.log("[POST RESEND 6.5] Recovery fallback succeeded!");
+          } else {
+            return NextResponse.json({ error: "Failed to resend invite", details: inviteError.message }, { status: 500 });
+          }
+        } else {
+          return NextResponse.json({ error: "Failed to resend invite", details: inviteError.message }, { status: 500 });
+        }
       }
 
+      console.log("[POST RESEND 7] Before serviceSupabase.from('patient_auth_mapping').update()");
       const { error: updateError } = await serviceSupabase
         .from("patient_auth_mapping")
         .update({
@@ -608,14 +664,19 @@ export async function POST(request: NextRequest) {
           invite_resend_count: mapping.invite_resend_count + 1
         })
         .eq("patient_id", patient_id);
+      console.log("[POST RESEND 8] Update query completed, error:", updateError?.message);
 
       if (updateError) {
+        console.log("[POST RESEND 8.1] Error: Failed to update mapping timestamp");
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
+      console.log("[POST RESEND 9] Before revalidatePath calls");
       revalidatePath("/admin/patient");
       revalidatePath(`/admin/patient/${patient_id}`);
+      console.log("[POST RESEND 10] After revalidatePath calls");
 
+      console.log("[POST RESEND] SUCCESS");
       return NextResponse.json({ 
         message: "Invite resent successfully",
         portal_access_status: "INVITE_PENDING"
@@ -623,6 +684,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "suspend") {
+      console.log("[POST SUSPEND] START");
+      console.log("[POST SUSPEND 1] Before serviceSupabase.from('patient_auth_mapping').update().select()");
       const { data, error } = await serviceSupabase
         .from("patient_auth_mapping")
         .update({
@@ -631,18 +694,24 @@ export async function POST(request: NextRequest) {
         })
         .eq("patient_id", patient_id)
         .select();
+      console.log("[POST SUSPEND 2] Mapping update completed, count:", data?.length, "error:", error?.message);
 
       if (error) {
+        console.log("[POST SUSPEND 2.1] Error: Failed to suspend portal access");
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
       if (!data || data.length === 0) {
+        console.log("[POST SUSPEND 2.2] Error: Mapping not found");
         return NextResponse.json({ error: "Portal access mapping not found" }, { status: 404 });
       }
 
+      console.log("[POST SUSPEND 3] Before revalidatePath calls");
       revalidatePath("/admin/patient");
       revalidatePath(`/admin/patient/${patient_id}`);
+      console.log("[POST SUSPEND 4] After revalidatePath calls");
 
+      console.log("[POST SUSPEND] SUCCESS");
       return NextResponse.json({ 
         message: "Portal access suspended successfully",
         portal_access_status: "SUSPENDED"
@@ -650,6 +719,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "restore") {
+      console.log("[POST RESTORE] START");
+      console.log("[POST RESTORE 1] Before serviceSupabase.from('patient_auth_mapping').update().select()");
       const { data, error } = await serviceSupabase
         .from("patient_auth_mapping")
         .update({
@@ -658,18 +729,24 @@ export async function POST(request: NextRequest) {
         })
         .eq("patient_id", patient_id)
         .select();
+      console.log("[POST RESTORE 2] Mapping update completed, count:", data?.length, "error:", error?.message);
 
       if (error) {
+        console.log("[POST RESTORE 2.1] Error: Failed to restore portal access");
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
       if (!data || data.length === 0) {
+        console.log("[POST RESTORE 2.2] Error: Mapping not found");
         return NextResponse.json({ error: "Portal access mapping not found" }, { status: 404 });
       }
 
+      console.log("[POST RESTORE 3] Before revalidatePath calls");
       revalidatePath("/admin/patient");
       revalidatePath(`/admin/patient/${patient_id}`);
+      console.log("[POST RESTORE 4] After revalidatePath calls");
 
+      console.log("[POST RESTORE] SUCCESS");
       return NextResponse.json({ 
         message: "Portal access restored successfully",
         portal_access_status: "ACTIVE"
@@ -699,44 +776,62 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  console.log("[GET PORTAL ACCESS] START");
   try {
+    console.log("[GET PORTAL ACCESS 1] Before calling createClient()");
     const supabase = await createClient();
+    console.log("[GET PORTAL ACCESS 2] After calling createClient() successfully");
+
+    console.log("[GET PORTAL ACCESS 3] Before calling supabase.auth.getUser()");
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log("[GET PORTAL ACCESS 4] After calling supabase.auth.getUser() successfully, userExists:", !!user, "error:", userError?.message);
 
     if (userError || !user) {
+      console.log("[GET PORTAL ACCESS 4.1] Error: Unauthorized user request");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userRole = user?.app_metadata?.role;
+    console.log("[GET PORTAL ACCESS 4.2] userRole:", userRole);
     if (userRole !== 'admin' && userRole !== 'super_admin' && userRole !== 'coordinator') {
+      console.log("[GET PORTAL ACCESS 4.3] Error: Forbidden access");
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
     const patient_id = searchParams.get("patient_id");
+    console.log("[GET PORTAL ACCESS 4.4] Query parameter patient_id:", patient_id);
 
     if (!patient_id) {
+      console.log("[GET PORTAL ACCESS 4.5] Error: patient_id parameter is required");
       return NextResponse.json({ error: "patient_id is required" }, { status: 400 });
     }
 
+    console.log("[GET PORTAL ACCESS 5] Before calling createServiceRoleClient()");
     const serviceSupabase = createServiceRoleClient();
+    console.log("[GET PORTAL ACCESS 6] After calling createServiceRoleClient() successfully");
 
+    console.log("[GET PORTAL ACCESS 7] Before querying patient_auth_mapping table");
     const { data, error } = await serviceSupabase
       .from("patient_auth_mapping")
       .select("*")
       .eq("patient_id", patient_id)
       .single();
+    console.log("[GET PORTAL ACCESS 8] Query result mappingExists:", !!data, "error:", error?.message, "code:", error?.code);
 
     if (error) {
       if (error.code === 'PGRST116') {
+        console.log("[GET PORTAL ACCESS 8.1] Query returned no row (PGRST116), status is NOT_ENABLED");
         return NextResponse.json({ 
           portal_access_status: "NOT_ENABLED",
           has_mapping: false
         });
       }
+      console.log("[GET PORTAL ACCESS 8.2] Query returned error, failing request");
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    console.log("[GET PORTAL ACCESS] SUCCESS");
     return NextResponse.json({
       portal_access_status: data.portal_access_status,
       portal_access_enabled_at: data.portal_access_enabled_at,
@@ -747,17 +842,13 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("[PORTAL ACCESS GET EXCEPTION] Caught error:");
-    console.error(error);
-    if (error && error.stack) {
-      console.error(error.stack);
-    }
-    if (error && error.message) {
-      console.error(error.message);
-    }
-    try {
-      console.error(JSON.stringify(error));
-    } catch (e) {}
+    console.error("[PORTAL ACCESS GET EXCEPTION] Caught error:", {
+      message: error?.message,
+      stack: error?.stack,
+      cause: error?.cause,
+      constructorName: error?.constructor?.name,
+      file: "app/api/admin/patient/portal-access/route.ts"
+    });
     return NextResponse.json({ 
       error: "Internal server error", 
       details: error?.message || String(error),
