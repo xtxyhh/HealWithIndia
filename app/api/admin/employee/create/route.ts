@@ -66,6 +66,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check duplicate in patients table
+    const { data: existingPatient } = await serviceSupabase
+      .from("patients")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingPatient) {
+      return NextResponse.json(
+        { error: "This email already belongs to a patient account." },
+        { status: 409 }
+      );
+    }
+
     // Insert CRM employee record
     const { data: employee, error: insertError } = await serviceSupabase
       .from("employees")
