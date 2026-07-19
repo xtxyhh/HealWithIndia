@@ -42,22 +42,18 @@ function PatientLoginContent() {
 
     try {
       setLoading(true);
-      console.log("[PATIENT LOGIN] Step 10: Submitting login credentials to Supabase Auth for email:", email);
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("[PATIENT LOGIN] Step 10: Authentication failed:", error.message);
         setError(error.message);
         setLoading(false);
         return;
       }
 
       const user = data.user;
-      console.log("[PATIENT LOGIN] Step 10: Authentication succeeded. User ID:", user.id);
 
       // Block staff from patient portal
       const role = user?.app_metadata?.role;

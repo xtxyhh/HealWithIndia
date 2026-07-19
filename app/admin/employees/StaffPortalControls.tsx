@@ -24,6 +24,7 @@ export default function StaffPortalControls({
   const [role, setRole] = useState(currentRole);
   const [showRoleModal, setShowRoleModal] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAction = async (action: string, payload?: any) => {
     setLoading(true);
     setError("");

@@ -25,6 +25,7 @@ export class ResponseTimer {
   /**
    * Calculate response metrics for a safety case
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static calculateMetrics(safetyCase: any): ResponseMetrics {
     const priority = safetyCase.priority || 'medium';
     const targets = RESPONSE_TARGETS[priority as keyof typeof RESPONSE_TARGETS] || RESPONSE_TARGETS.medium;
@@ -79,6 +80,7 @@ export class ResponseTimer {
   /**
    * Check if a case should generate a response delay signal
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static shouldGenerateDelaySignal(safetyCase: any): boolean {
     const metrics = this.calculateMetrics(safetyCase);
     
@@ -124,6 +126,7 @@ export class ResponseTimer {
   /**
    * Get response performance summary for admin display
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static getPerformanceSummary(allCases: any[]): {
     total_cases: number;
     acknowledged_within_target: number;

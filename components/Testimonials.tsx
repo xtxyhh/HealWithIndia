@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import {
 
@@ -1010,11 +1011,11 @@ text-[17px]
 
 >
 
-"
+&quot;
 
 {patient.quote}
 
-"
+&quot;
 
 </p>
 
@@ -1762,7 +1763,7 @@ Patients from more than
 
 100 countries
 
-trust India's healthcare
+trust India&apos;s healthcare
 
 system.
 
@@ -1920,7 +1921,7 @@ leading-relaxed
 
 Partnered with
 
-India's leading
+India&apos;s leading
 
 JCI and NABH
 
@@ -2058,7 +2059,7 @@ international patient team.
 
 
 
-<a
+<Link
 
 href="/#consultation"
 
@@ -2078,7 +2079,7 @@ px-9
 
 py-5
 
-rounded-[24px]
+rounded-2xl
 
 bg-gradient-to-r
 
@@ -2094,11 +2095,11 @@ text-lg
 
 hover:scale-[1.03]
 
-transition-all
+transition-transform
 
 duration-500
 
-shadow-[0_0_60px_rgba(37,99,235,.35)]
+shadow-[0_0_60px_rgba(37,99,235,.4)]
 
 "
 
@@ -2116,13 +2117,15 @@ className="
 
 group-hover:translate-x-1
 
-transition-all
+transition-transform
+
+duration-300
 
 "
 
 />
 
-</a>
+</Link>
 
 
 

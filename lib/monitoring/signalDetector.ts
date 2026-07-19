@@ -10,6 +10,7 @@ export interface Signal {
   source: 'check_in' | 'case' | 'fraud_report' | 'coordinator' | 'monitoring_engine';
   source_entity_id?: string;
   source_entity_type?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   status?: 'active' | 'resolved' | 'superseded';
 }

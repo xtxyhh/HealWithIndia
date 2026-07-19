@@ -1,99 +1,72 @@
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/reset-password';
+  const code = requestUrl.searchParams.get("code");
+  const next = requestUrl.searchParams.get("next") || "/reset-password";
 
   const cookieStore = await cookies();
-  console.log("[RUNTIME LOG] [app/auth/callback/route.ts] env check BEFORE createServerClient:", {
-    URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    ANON: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SERVICE: !!process.env.SUPABASE_SERVICE_ROLE_KEY
-  });
-  console.log("[RUNTIME LOG] [app/auth/callback/route.ts] runtime check:", {
-    VERCEL: process.env.VERCEL,
-    NODE_ENV: process.env.NODE_ENV,
-    NEXT_RUNTIME: process.env.NEXT_RUNTIME,
-    VERCEL_ENV: process.env.VERCEL_ENV
-  });
-  console.log("[RUNTIME LOG] [app/auth/callback/route.ts] deployment check:", {
-    BUILD_ID: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'unknown',
-    COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
-    DEPLOYMENT_URL: process.env.VERCEL_URL || 'unknown'
-  });
 
-  console.log("[CREATE CALLBACK SERVER CLIENT] BEFORE");
-  let supabase;
-  try {
-    supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: any) {
-            try {
-              cookieStore.set({ name, value, ...options });
-            } catch (err) {
-              // Handle server action / route handler cookie setting edge cases
-            }
-          },
-          remove(name: string, options: any) {
-            try {
-              cookieStore.set({ name, value: '', ...options });
-            } catch (err) {
-              // Handle cookie removal edge cases
-            }
-          },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
-      }
-    );
-    console.log("[CREATE CALLBACK SERVER CLIENT] AFTER");
-  } catch (error: any) {
-    console.error("[CREATE CALLBACK SERVER CLIENT] ERROR THROWN:", {
-      message: error?.message,
-      stack: error?.stack,
-      cause: error?.cause,
-      constructorName: error?.constructor?.name,
-      file: "app/auth/callback/route.ts",
-      line: 35
-    });
-    throw error;
-  }
+        set(name: string, value: string, options: Record<string, unknown>) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // In route handlers cookies may not be settable in all contexts
+          }
+        },
+        remove(name: string, options: Record<string, unknown>) {
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {
+            // In route handlers cookies may not be removable in all contexts
+          }
+        },
+      },
+    }
+  );
 
-  // Check if we already have an active session (e.g. from a prior code exchange or verify redirect)
-  const { data: { session: existingSession } } = await supabase.auth.getSession();
+  // Check if we already have an active session (e.g. from a prior code exchange or verify redirect).
+  // This prevents double-consuming the one-time-use token from browser prefetches or email scanners.
+  const {
+    data: { session: existingSession },
+  } = await supabase.auth.getSession();
   if (existingSession) {
-    console.log("[AUTH CALLBACK] Existing active session found. Redirecting straight to:", next);
     return NextResponse.redirect(new URL(next, request.url));
   }
 
   if (code) {
-    console.log("[AUTH CALLBACK] Step 6: Resolving code exchange. next destination:", next);
-    const { data: exchangeData, error } = await supabase.auth.exchangeCodeForSession(code);
-    
+    const { data: exchangeData, error } =
+      await supabase.auth.exchangeCodeForSession(code);
+
     if (!error) {
-      console.log("[AUTH CALLBACK] Step 6: Code successfully exchanged for session. User ID:", exchangeData.user?.id);
+      console.log(
+        "[AUTH CALLBACK] Code exchanged for session. User:",
+        exchangeData.user?.id
+      );
       return NextResponse.redirect(new URL(next, request.url));
-    } else {
-      console.error("[AUTH CALLBACK] Step 6: Failed to exchange code for session:", error.message);
-      
-      // Fallback check: Did another concurrent request/prefetch successfully set the session cookies anyway?
-      const { data: { session: fallbackSession } } = await supabase.auth.getSession();
-      if (fallbackSession) {
-        console.log("[AUTH CALLBACK] Session found post-failure (concurrency/cookies set). Redirecting to:", next);
-        return NextResponse.redirect(new URL(next, request.url));
-      }
     }
-  } else {
-    console.warn("[AUTH CALLBACK] Step 6: No code parameter found in callback URL query params.");
+
+    // Fallback: check if a concurrent request already set the session cookies
+    const {
+      data: { session: fallbackSession },
+    } = await supabase.auth.getSession();
+    if (fallbackSession) {
+      return NextResponse.redirect(new URL(next, request.url));
+    }
   }
 
-  console.log("[AUTH CALLBACK] Redirecting to fallback path.");
-  return NextResponse.redirect(new URL(`/patient-login?error=auth_callback_failed`, request.url));
+  // No code or code exchange failed — redirect to patient login with error
+  return NextResponse.redirect(
+    new URL("/patient-login?error=auth_callback_failed", request.url)
+  );
 }

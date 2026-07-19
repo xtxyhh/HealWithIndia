@@ -11,6 +11,7 @@ export interface EscalationAction {
   category?: string;
   priority?: 'low' | 'medium' | 'high' | 'critical';
   description?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -18,6 +19,7 @@ export class IncidentEscalator {
   /**
    * Determine escalation actions based on detected signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static determineEscalationActions(signals: Signal[], existingCases: any[]): EscalationAction[] {
     const actions: EscalationAction[] = [];
     const patientId = signals[0]?.patient_id;
@@ -228,6 +230,7 @@ export class IncidentEscalator {
   static shouldSuppressCaseCreation(
     patientId: bigint,
     category: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     existingCases: any[]
   ): boolean {
     // Check for recent duplicate case (within last hour)

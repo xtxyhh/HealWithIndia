@@ -29,19 +29,9 @@ export default async function AdminPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("[TEMPORARY AUDIT LOG admin/page.tsx] Server Component mount. user resolved:", !!user);
-  if (user) {
-    console.log("[TEMPORARY AUDIT LOG admin/page.tsx] user.id:", user.id);
-    console.log("[TEMPORARY AUDIT LOG admin/page.tsx] user.email:", user.email);
-    console.log("[TEMPORARY AUDIT LOG admin/page.tsx] user.app_metadata.role:", user.app_metadata?.role);
-  } else {
-    console.log("[TEMPORARY AUDIT LOG admin/page.tsx] Redirecting to /login because user is null on server side");
-  }
 
   if (!user) {
-
     redirect("/login");
-
   }
 
   const {

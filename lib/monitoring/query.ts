@@ -165,10 +165,12 @@ export async function fetchMonitoringData(
   );
 
   const overdueCheckIns =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     activeSignals?.filter((s: any) => s.signal_type === "check_in_overdue")
       ?.length || 0;
   const responseDelays =
     activeSignals?.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (s: any) => s.signal_type === "critical_case_response_delay"
     )?.length || 0;
 

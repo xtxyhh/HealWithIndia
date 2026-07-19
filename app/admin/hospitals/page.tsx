@@ -5,6 +5,7 @@ export const metadata = {
 };
 
 import Image from "next/image";
+import Link from "next/link";
 
 import {
 
@@ -254,7 +255,7 @@ Trusted By International Patients
 
 <h1 className="text-6xl lg:text-8xl font-bold mt-10 leading-tight">
 
-India's Leading
+India&apos;s Leading
 
 <br/>
 
@@ -366,7 +367,7 @@ World-Class Hospitals
 
 <p className="text-slate-400 mt-6 max-w-2xl mx-auto">
 
-Partnered with India's most trusted hospitals
+Partnered with India&apos;s most trusted hospitals
 
 providing advanced healthcare and international
 
@@ -648,7 +649,7 @@ Trusted Healthcare Partner
 
 <p className="text-slate-400 mt-6 max-w-3xl mx-auto">
 
-We help international patients connect with India's top hospitals,
+We help international patients connect with India&apos;s top hospitals,
 
 assist with treatment planning, travel, visas and provide complete
 
@@ -842,7 +843,7 @@ className="bg-slate-950 border border-slate-800 rounded-[32px] p-10 hover:border
 
 <p className="text-slate-300 mt-8 leading-relaxed text-lg">
 
-"{testimonial.review}"
+&quot;{testimonial.review}&quot;
 
 </p>
 
@@ -928,7 +929,7 @@ completely free of charge.
 
 <div className="flex justify-center gap-5 flex-wrap mt-12">
 
-<a
+<Link
 
 href="/#consultation"
 
@@ -938,11 +939,11 @@ className="bg-blue-600 hover:bg-blue-700 px-10 py-5 rounded-2xl font-semibold te
 
 Get Free Consultation
 
-</a>
+</Link>
 
 
 
-<a
+<Link
 
 href="/treatments"
 
@@ -952,7 +953,7 @@ className="border border-slate-700 hover:border-blue-500 px-10 py-5 rounded-2xl 
 
 Explore Treatments
 
-</a>
+</Link>
 
 </div>
 

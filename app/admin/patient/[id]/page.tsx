@@ -1123,7 +1123,7 @@ mt-14
 
 {/* REVENUE */}
 
-// Render parsed financials
+{/* Render parsed financials */}
 <div
   className="
   rounded-[36px]

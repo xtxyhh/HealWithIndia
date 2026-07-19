@@ -64,19 +64,16 @@ export default function ResetPasswordPage() {
     try {
       setLoading(true);
 
-      console.log("[PASSWORD RESET] Step 7: Submitting password update request to Supabase Auth.");
       const { data, error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (updateError) {
-        console.error("[PASSWORD RESET] Step 7: Failed to update password:", updateError.message);
         setError(updateError.message);
         setLoading(false);
         return;
       }
 
-      console.log("[PASSWORD RESET] Step 7: Password successfully updated for user ID:", data.user?.id);
       setSuccess(true);
       
       const user = data.user;
@@ -84,16 +81,10 @@ export default function ResetPasswordPage() {
       
       // For patients, transition mapping status to ACTIVE
       if (!isStaff) {
-        console.log("[PASSWORD RESET] Step 8: Triggering ACTIVE portal transition API route.");
         try {
-          const res = await fetch('/api/safety/transition-portal-active', { method: 'POST' });
-          if (res.ok) {
-            console.log("[PASSWORD RESET] Step 8: ACTIVE portal transition API call succeeded.");
-          } else {
-            console.warn("[PASSWORD RESET] Step 8: ACTIVE portal transition API call returned status:", res.status);
-          }
-        } catch (e) {
-          console.error("[PASSWORD RESET] Step 8: Transition API call failed:", e);
+          await fetch('/api/safety/transition-portal-active', { method: 'POST' });
+        } catch {
+          // Non-critical: portal status will be updated on next login
         }
       }
 

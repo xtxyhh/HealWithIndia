@@ -1,19 +1,21 @@
 import {
   Hospital,
-  DollarSign,
-  Plane,
   UserRound,
   Globe,
   FileText,
-  ShieldCheck,
   BadgeCheck,
   Star,
-  HeartHandshake,
   Sparkles,
   ChevronRight,
   ArrowUpRight,
+  ShieldCheck,
+  Plane,
+  HeartHandshake,
+  BadgeDollarSign,
+  DollarSign,
   type LucideIcon,
 } from "lucide-react";
+import Link from "next/link";
 
 type Feature = {
   icon: LucideIcon;
@@ -350,7 +352,7 @@ export default function TrustBar() {
               recommendations and a free treatment estimate.
             </p>
 
-            <a
+            <Link
               href="/#consultation"
               className="group inline-flex items-center gap-3 mt-10 px-9 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-lg hover:scale-[1.03] transition-transform duration-500 shadow-[0_0_60px_rgba(37,99,235,.4)]"
             >
@@ -359,7 +361,7 @@ export default function TrustBar() {
                 size={20}
                 className="group-hover:translate-x-1 transition-transform duration-300"
               />
-            </a>
+            </Link>
           </div>
         </div>
       </div>

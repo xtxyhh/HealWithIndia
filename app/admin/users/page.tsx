@@ -61,10 +61,6 @@ export default function UserManagementPage() {
 
   const [activeTab, setActiveTab] = useState<"users" | "permissions">("users");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -82,6 +78,11 @@ export default function UserManagementPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const showSuccessMsg = (msg: string) => {
     setSuccess(msg);

@@ -5,6 +5,7 @@ import {
   BadgeDollarSign,
   CheckCircle2,
 } from "lucide-react";
+import Link from "next/link";
 
 const features = [
   {
@@ -77,7 +78,7 @@ export default function AboutPage() {
           <p className="max-w-4xl mx-auto mt-8 text-xl text-slate-300 leading-relaxed">
 
             HealWithIndia connects international patients with
-            India's leading hospitals, experienced specialists
+            India&apos;s leading hospitals, experienced specialists
             and affordable world-class treatment through
             personalized end-to-end medical travel support.
 
@@ -212,7 +213,7 @@ export default function AboutPage() {
 
               <p className="text-slate-400 mt-8 text-lg leading-relaxed">
 
-                To become the world's most trusted healthcare
+                To become the world&apos;s most trusted healthcare
                 concierge helping patients make informed
                 treatment decisions and access exceptional
                 medical expertise.
@@ -386,14 +387,14 @@ export default function AboutPage() {
 
           </p>
 
-          <a
+          <Link
             href="/#consultation"
             className="inline-block mt-10 bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-2xl font-semibold text-white transition shadow-lg"
           >
 
             Get Free Consultation
 
-          </a>
+          </Link>
 
         </div>
 

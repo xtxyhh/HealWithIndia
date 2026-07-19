@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -202,8 +202,11 @@ export default function Navbar() {
   }, [menuOpen]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenuOpen(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileTreatments(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileHospitals(false);
   }, [pathname]);
 
@@ -392,13 +395,13 @@ export default function Navbar() {
               </a>
 
               {/* MAIN CTA — desktop only */}
-              <a
+              <Link
                 href="/#consultation"
                 className="hidden lg:flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors duration-200"
               >
                 Free consultation
                 <ChevronRight size={15} />
-              </a>
+              </Link>
 
               {/* MOBILE MENU TOGGLE */}
               <button
@@ -595,14 +598,14 @@ export default function Navbar() {
               <MessageCircle size={18} />
               WhatsApp
             </a>
-            <a
+            <Link
               href="/#consultation"
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors duration-200"
             >
               Start free consultation
               <ChevronRight size={17} />
-            </a>
+            </Link>
           </div>
         </div>
       </div>

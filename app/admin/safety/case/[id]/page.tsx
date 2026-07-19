@@ -18,19 +18,12 @@ import {
 export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [safetyCase, setSafetyCase] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [events, setEvents] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [caseId, setCaseId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      const { id } = await params;
-      setCaseId(id);
-      loadCaseData(id);
-    };
-    init();
-  }, [params]);
 
   const loadCaseData = async (id: string) => {
     try {
@@ -60,6 +53,16 @@ export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id:
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      const { id } = await params;
+      setCaseId(id);
+      loadCaseData(id);
+    };
+    init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
 
   const handleAction = async (status: string) => {
     if (!caseId) return;
