@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthListener from "@/components/AuthListener";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://healwithindia.vercel.app"),
@@ -98,9 +99,8 @@ export default function RootLayout({
     <html lang="en">
 
       <body className="bg-black text-white">
-
+        <AuthListener />
         {children}
-
       </body>
 
     </html>

@@ -88,14 +88,12 @@ export default function ResetPasswordPage() {
         }
       }
 
-      // Sign out to enforce manual login validation
-      await supabase.auth.signOut();
-
+      // Redirect to dashboard immediately after success to enforce automatic login
       setTimeout(() => {
         if (isStaff) {
-          router.replace("/admin/login");
+          router.replace("/admin");
         } else {
-          router.replace("/patient-login");
+          router.replace("/safety");
         }
       }, 2000);
 
