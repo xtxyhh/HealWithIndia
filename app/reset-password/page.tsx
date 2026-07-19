@@ -166,9 +166,26 @@ export default function ResetPasswordPage() {
       // For patients, transition mapping status to ACTIVE
       if (!userIsStaff) {
         try {
-          await fetch('/api/safety/transition-portal-active', { method: 'POST' });
-        } catch {
-          // Non-critical: portal status will be updated on next login
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            console.log("[RESET PASSWORD] Transitioning portal status to ACTIVE via JWT token...");
+            const res = await fetch("/api/safety/transition-portal-active", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`
+              }
+            });
+            if (res.ok) {
+              console.log("[RESET PASSWORD] Portal transition succeeded.");
+            } else {
+              console.error("[RESET PASSWORD] Portal transition returned error status:", res.status, await res.text());
+            }
+          } else {
+            console.warn("[RESET PASSWORD] No active session found to transition status.");
+          }
+        } catch (fetchError: any) {
+          console.error("[RESET PASSWORD] Portal transition API call threw:", fetchError?.message);
         }
       }
 

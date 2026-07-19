@@ -3,11 +3,27 @@ import { createClient } from "@/lib/supabaseServer";
 
 export async function POST(request: NextRequest) {
   try {
+    const authHeader = request.headers.get("authorization");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let user: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let userError: any = null;
+
     const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token);
+      user = jwtUser;
+      userError = jwtError;
+    } else {
+      const { data: { user: cookieUser }, error: cookieError } = await supabase.auth.getUser();
+      user = cookieUser;
+      userError = cookieError;
+    }
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: userError?.message || "Unauthorized" }, { status: 401 });
     }
 
     const { createServiceRoleClient } = await import("@/lib/supabaseServer");
@@ -28,8 +44,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.error("Error in transition endpoint:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Internal server error" }, { status: 500 });
   }
 }
