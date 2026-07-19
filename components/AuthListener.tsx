@@ -20,10 +20,17 @@ export default function AuthListener() {
     });
 
     // 2. Immediate check of URL hash on mount or pathname changes
-    const handleHashCheck = () => {
+    const handleHashCheck = async () => {
       if (typeof window !== "undefined" && window.location.hash) {
         const hash = window.location.hash;
         if (hash.includes("type=recovery") || hash.includes("type=invite")) {
+          // If there is an active session (e.g. pre-existing admin session), clear it first
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            console.log("[AUTH LISTENER] Clearing active session to prevent recovery leakage");
+            await supabase.auth.signOut();
+          }
+
           if (pathname !== "/reset-password") {
             console.log(
               `[AUTH LISTENER] Recovery/Invite hash detected on path "${pathname}", redirecting to /reset-password`
