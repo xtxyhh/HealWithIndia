@@ -196,7 +196,7 @@ export default function ResetPasswordPage() {
         } else {
           router.replace("/safety");
         }
-      }, 2000);
+      }, 1500);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
