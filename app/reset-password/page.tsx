@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       
       const user = data.user;
-      const userIsStaff = user?.user_metadata?.is_staff || !!user?.app_metadata?.role;
+      const userIsStaff = user?.user_metadata?.is_staff === true || (user?.app_metadata?.role && user.app_metadata.role !== "patient");
       
       // For patients, transition mapping status to ACTIVE
       if (!userIsStaff) {
