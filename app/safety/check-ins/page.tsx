@@ -85,10 +85,6 @@ export default function CheckInsPage() {
   const [error, setError] = useState("");
   const [recentCheckIns, setRecentCheckIns] = useState<any[]>([]);
 
-  useEffect(() => {
-    loadRecentCheckIns();
-  }, []);
-
   const loadRecentCheckIns = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -103,6 +99,10 @@ export default function CheckInsPage() {
       console.error("Error loading check-ins:", err);
     }
   };
+
+  useEffect(() => {
+    loadRecentCheckIns();
+  }, []);
 
   const handleCheckIn = async (status: "safe" | "needs_assistance") => {
     setError("");

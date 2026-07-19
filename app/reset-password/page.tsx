@@ -14,11 +14,61 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [sessionBefore, setSessionBefore] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [sessionAfter, setSessionAfter] = useState<any>(null);
+  const [authEvent, setAuthEvent] = useState<string>("NONE");
 
   useEffect(() => {
+    // 1. Listen to Supabase Auth state change events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(`[FORENSIC EVENT] onAuthStateChange event: ${event}, user: ${session?.user?.email} (${session?.user?.id})`);
+      setAuthEvent(event);
+      setSessionAfter(session);
+    });
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      // Step 2a: Capture the initial session state (e.g. pre-existing admin session)
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      setSessionBefore(initialSession);
+      console.log("[FORENSIC BEFORE] Initial session user email:", initialSession?.user?.email, "id:", initialSession?.user?.id);
+
+      // Step 2b: Handle URL hash parsing if a recovery/invite flow is active
+      if (typeof window !== "undefined" && window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        const type = params.get("type");
+
+        if (accessToken && (type === "recovery" || type === "invite" || hash.includes("type=recovery") || hash.includes("type=invite"))) {
+          console.log("[FORENSIC HASH] Recovery/Invite hash detected in URL.");
+
+          // If there is a pre-existing active session for a DIFFERENT user, sign out first
+          if (initialSession) {
+            console.log("[FORENSIC CLEAR] Sign out existing user session to enforce session isolation");
+            await supabase.auth.signOut();
+          }
+
+          console.log("[FORENSIC HASH] Setting recovery session using token from URL hash...");
+          const { data: setSessionData, error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || "",
+          });
+
+          if (setSessionError) {
+            console.error("[FORENSIC HASH] setSession error:", setSessionError.message);
+          } else {
+            console.log("[FORENSIC HASH] setSession succeeded. Recovery session user:", setSessionData.session?.user?.email, "id:", setSessionData.session?.user?.id);
+            setSessionAfter(setSessionData.session);
+          }
+        }
+      }
+
+      // Step 2c: Retrieve the final active session to proceed with reset password
+      const { data: { session: activeSession } } = await supabase.auth.getSession();
+      if (!activeSession) {
         setError("Your reset session has expired or is invalid. Please request a new invite link.");
         setCheckingSession(false);
         return;
@@ -28,7 +78,7 @@ export default function ResetPasswordPage() {
       const { data: mapping } = await supabase
         .from("patient_auth_mapping")
         .select("portal_access_status")
-        .eq("auth_user_id", session.user.id)
+        .eq("auth_user_id", activeSession.user.id)
         .maybeSingle();
 
       if (mapping?.portal_access_status === "ACTIVE") {
@@ -40,7 +90,12 @@ export default function ResetPasswordPage() {
 
       setCheckingSession(false);
     };
+
     checkSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   const handleResetPassword = async () => {
@@ -64,6 +119,35 @@ export default function ResetPasswordPage() {
     try {
       setLoading(true);
 
+      const userFromGetUser = await supabase.auth.getUser();
+      const sessionFromGetSession = await supabase.auth.getSession();
+
+      // Log all forensic data before updating password to verify isolation
+      console.log("====================================================");
+      console.log("[FORENSIC RUNTIME REPORT - reset-password]");
+      console.log("Current authenticated user id:", userFromGetUser.data.user?.id);
+      console.log("Current authenticated email:", userFromGetUser.data.user?.email);
+      console.log("Recovery email recipient:", userFromGetUser.data.user?.email);
+      console.log("Recovery session user id:", sessionFromGetSession.data.session?.user?.id);
+      console.log("Recovery session email:", sessionFromGetSession.data.session?.user?.email);
+      console.log("Supabase auth event:", authEvent);
+      console.log("Session before recovery:", JSON.stringify(sessionBefore));
+      console.log("Session after recovery:", JSON.stringify(sessionAfter));
+      console.log("User returned by getUser():", JSON.stringify(userFromGetUser.data.user));
+      console.log("User returned by getSession():", JSON.stringify(sessionFromGetSession.data.session));
+      console.log("====================================================");
+
+      // Security Isolation Guard: block if updating password for an admin using an administrative session
+      const callerRole = userFromGetUser.data.user?.app_metadata?.role;
+      const isStaff = userFromGetUser.data.user?.user_metadata?.is_staff === true || (callerRole && callerRole !== "patient");
+      if (isStaff && sessionBefore && sessionBefore.user.id === userFromGetUser.data.user?.id) {
+        if (typeof window !== "undefined" && window.location.hash) {
+          setError("Session isolation guard: Admin session detected. Patient recovery token failed to load a patient session. Operation blocked for security.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data, error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
@@ -77,10 +161,10 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       
       const user = data.user;
-      const isStaff = user?.user_metadata?.is_staff || !!user?.app_metadata?.role;
+      const userIsStaff = user?.user_metadata?.is_staff || !!user?.app_metadata?.role;
       
       // For patients, transition mapping status to ACTIVE
-      if (!isStaff) {
+      if (!userIsStaff) {
         try {
           await fetch('/api/safety/transition-portal-active', { method: 'POST' });
         } catch {
@@ -90,13 +174,14 @@ export default function ResetPasswordPage() {
 
       // Redirect to dashboard immediately after success to enforce automatic login
       setTimeout(() => {
-        if (isStaff) {
+        if (userIsStaff) {
           router.replace("/admin");
         } else {
           router.replace("/safety");
         }
       }, 2000);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
