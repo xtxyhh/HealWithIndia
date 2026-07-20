@@ -32,6 +32,17 @@ interface PatientControlsProps {
     currency: string;
     invoiceStatus: string;
     notesText: string;
+    flightNumber?: string;
+    flightDepartureTime?: string;
+    hotelName?: string;
+    hotelAddress?: string;
+    hotelBookingReference?: string;
+    doctorName?: string;
+    treatmentPlanSummary?: string;
+    allergies?: string;
+    bloodGroup?: string;
+    emergencyContacts?: string;
+    medicalHistory?: string;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   hospitals: any[];
@@ -91,6 +102,20 @@ export default function PatientControls({
   const [coordinatorId, setCoordinatorId] = useState(assignedCoordinatorId || "none");
   const [stage, setStage] = useState(journeyStage || "initial");
   const [risk, setRisk] = useState(riskLevel || "normal");
+
+  // Extra details state variables
+  const [flightNo, setFlightNo] = useState(financials?.flightNumber || "");
+  const [flightDep, setFlightDep] = useState(financials?.flightDepartureTime || "");
+  const [hotelN, setHotelN] = useState(financials?.hotelName || "");
+  const [hotelAddr, setHotelAddr] = useState(financials?.hotelAddress || "");
+  const [hotelRef, setHotelRef] = useState(financials?.hotelBookingReference || "");
+  const [doctorN, setDoctorN] = useState(financials?.doctorName || "");
+  const [planSummary, setPlanSummary] = useState(financials?.treatmentPlanSummary || "");
+  const [allergiesText, setAllergiesText] = useState(financials?.allergies || "");
+  const [bloodG, setBloodG] = useState(financials?.bloodGroup || "");
+  const [emergencyConts, setEmergencyConts] = useState(financials?.emergencyContacts || "");
+  const [medHistory, setMedHistory] = useState(financials?.medicalHistory || "");
+
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState("");
 
@@ -116,33 +141,55 @@ export default function PatientControls({
     if (financials) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCost(financials.estimatedCost);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setPaid(financials.paidAmount);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setCurr(financials.currency);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setInvStatus(financials.invoiceStatus);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setNotes(financials.notesText);
+       
+      setFlightNo(financials.flightNumber || "");
+       
+      setFlightDep(financials.flightDepartureTime || "");
+       
+      setHotelN(financials.hotelName || "");
+       
+      setHotelAddr(financials.hotelAddress || "");
+       
+      setHotelRef(financials.hotelBookingReference || "");
+       
+      setDoctorN(financials.doctorName || "");
+       
+      setPlanSummary(financials.treatmentPlanSummary || "");
+       
+      setAllergiesText(financials.allergies || "");
+       
+      setBloodG(financials.bloodGroup || "");
+       
+      setEmergencyConts(financials.emergencyContacts || "");
+       
+      setMedHistory(financials.medicalHistory || "");
     }
   }, [financials]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(patientName || "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setPhone(patientPhone || "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setCountry(patientCountry || "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setTreatment(patientTreatment || "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setHospital(assignedHospital || "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setCoordinatorId(assignedCoordinatorId || "none");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setStage(journeyStage || "initial");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setRisk(riskLevel || "normal");
   }, [patientName, patientPhone, patientCountry, patientTreatment, assignedHospital, assignedCoordinatorId, journeyStage, riskLevel]);
 
@@ -238,7 +285,19 @@ export default function PatientControls({
           paid_amount: paid,
           currency: curr,
           invoice_status: invStatus,
-          notes_text: notes
+          notes_text: notes,
+          // Preserve details
+          flight_number: flightNo,
+          flight_departure_time: flightDep,
+          hotel_name: hotelN,
+          hotel_address: hotelAddr,
+          hotel_booking_reference: hotelRef,
+          doctor_name: doctorN,
+          treatment_plan_summary: planSummary,
+          allergies: allergiesText,
+          blood_group: bloodG,
+          emergency_contacts: emergencyConts,
+          medical_history: medHistory
         })
       });
       const data = await res.json();
@@ -278,7 +337,19 @@ export default function PatientControls({
           paid_amount: paid,
           currency: curr,
           invoice_status: invStatus,
-          notes_text: notes
+          notes_text: notes,
+          // Save extra details
+          flight_number: flightNo,
+          flight_departure_time: flightDep,
+          hotel_name: hotelN,
+          hotel_address: hotelAddr,
+          hotel_booking_reference: hotelRef,
+          doctor_name: doctorN,
+          treatment_plan_summary: planSummary,
+          allergies: allergiesText,
+          blood_group: bloodG,
+          emergency_contacts: emergencyConts,
+          medical_history: medHistory
         })
       });
       const data = await res.json();
@@ -720,6 +791,139 @@ export default function PatientControls({
                   <option value="high">High Risk</option>
                   <option value="critical">Critical Emergency</option>
                 </select>
+              </div>
+
+              {/* Travel and Arrival Details */}
+              <div className="border-t border-slate-800 pt-5 space-y-4">
+                <h4 className="text-sm font-bold text-blue-400">Flight & Arrival Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Flight Number</label>
+                    <input
+                      type="text"
+                      value={flightNo}
+                      onChange={e => setFlightNo(e.target.value)}
+                      placeholder="e.g. EK506"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Departure / Arrival Time</label>
+                    <input
+                      type="text"
+                      value={flightDep}
+                      onChange={e => setFlightDep(e.target.value)}
+                      placeholder="e.g. 2026-07-25 14:00"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Accommodation / Stay Details */}
+              <div className="border-t border-slate-800 pt-5 space-y-4">
+                <h4 className="text-sm font-bold text-blue-400">Accommodation / Hotel Stay</h4>
+                <div>
+                  <label className="text-slate-400 text-xs font-semibold">Hotel Name</label>
+                  <input
+                    type="text"
+                    value={hotelN}
+                    onChange={e => setHotelN(e.target.value)}
+                    placeholder="e.g. Hyatt Regency Delhi"
+                    className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Booking Reference</label>
+                    <input
+                      type="text"
+                      value={hotelRef}
+                      onChange={e => setHotelRef(e.target.value)}
+                      placeholder="e.g. HT-77298B"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Hotel Address</label>
+                    <input
+                      type="text"
+                      value={hotelAddr}
+                      onChange={e => setHotelAddr(e.target.value)}
+                      placeholder="e.g. Ring Rd, Bhikaji Cama Place"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Medical Profile & Emergency Contacts */}
+              <div className="border-t border-slate-800 pt-5 space-y-4">
+                <h4 className="text-sm font-bold text-blue-400">Medical Profile & Safety History</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Doctor Name</label>
+                    <input
+                      type="text"
+                      value={doctorN}
+                      onChange={e => setDoctorN(e.target.value)}
+                      placeholder="e.g. Dr. A. K. Sharma"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Blood Group</label>
+                    <input
+                      type="text"
+                      value={bloodG}
+                      onChange={e => setBloodG(e.target.value)}
+                      placeholder="e.g. O positive"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Allergies</label>
+                    <input
+                      type="text"
+                      value={allergiesText}
+                      onChange={e => setAllergiesText(e.target.value)}
+                      placeholder="e.g. Penicillin, Peanuts"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold">Emergency Contacts</label>
+                    <input
+                      type="text"
+                      value={emergencyConts}
+                      onChange={e => setEmergencyConts(e.target.value)}
+                      placeholder="e.g. Mary (Wife): +1-555-1234"
+                      className="w-full mt-2 bg-black border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500 text-sm text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-slate-400 text-xs font-semibold">Treatment Plan Summary</label>
+                  <textarea
+                    value={planSummary}
+                    onChange={e => setPlanSummary(e.target.value)}
+                    rows={3}
+                    placeholder="Brief summary of scheduled medical procedures..."
+                    className="w-full mt-2 bg-black border border-slate-800 rounded-xl p-4 outline-none focus:border-blue-500 text-sm text-white resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 text-xs font-semibold">Medical History</label>
+                  <textarea
+                    value={medHistory}
+                    onChange={e => setMedHistory(e.target.value)}
+                    rows={3}
+                    placeholder="Underlying medical conditions, history, etc..."
+                    className="w-full mt-2 bg-black border border-slate-800 rounded-xl p-4 outline-none focus:border-blue-500 text-sm text-white resize-none"
+                  />
+                </div>
               </div>
             </div>
 

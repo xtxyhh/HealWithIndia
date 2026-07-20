@@ -30,6 +30,9 @@ function PatientLoginContent() {
     if (errorParam === 'no_access') {
       setError("Patient portal access has not been enabled for this account. Please contact your HealWithIndia coordinator.");
     }
+    if (errorParam === 'auth_callback_failed') {
+      setError("Authentication callback failed. Please retry from your invitation email or contact support.");
+    }
   }, [searchParams]);
 
   const handleLogin = async () => {

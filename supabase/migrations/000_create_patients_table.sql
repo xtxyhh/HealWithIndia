@@ -41,6 +41,14 @@ CREATE POLICY "Service role can manage patients"
   ON patients FOR ALL
   USING (auth.role() = 'service_role');
 
+-- Stub for verify_patient_ownership to allow initial policy creation (overridden in migration 002/003)
+CREATE OR REPLACE FUNCTION verify_patient_ownership(candidate_patient_id BIGINT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Policy: Patients can view their own record via auth mapping
 -- This will be enforced after patient_auth_mapping table exists in migration 002
 CREATE POLICY "Patients can view own record"

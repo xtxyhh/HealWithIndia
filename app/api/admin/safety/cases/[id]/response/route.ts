@@ -6,7 +6,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const params = await context.params;
+    const { id } = await context.params;
     const supabase = await createClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -29,7 +29,7 @@ export async function POST(
       return NextResponse.json({ error: "Missing action" }, { status: 400 });
     }
 
-    const caseId = params.id;
+    const caseId = id;
 
     // Fetch current case state
     const { data: safetyCase, error: caseError } = await supabase
@@ -43,7 +43,7 @@ export async function POST(
     }
 
     const now = new Date().toISOString();
-    let updates: any = {};
+    const updates: any = {};
     let eventType: string = '';
     let eventDescription: string = '';
 

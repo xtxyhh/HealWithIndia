@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 import { RiskAssessor } from "@/lib/monitoring/riskAssessor";
+import { Signal } from "@/lib/monitoring/signalDetector";
 
 // Patient-safe DTO - filters internal monitoring data
 interface PatientSafeRiskResponse {
@@ -52,24 +53,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: signalsError.message }, { status: 500 });
     }
 
-    // If no risk assessment exists, create a default normal assessment
+    const signals = (activeSignals || []).map((signal: Signal) => ({
+      ...signal,
+      patient_id: resolvedPatientId,
+    })) as Signal[];
+
+    // If no risk assessment exists, derive one from active signals
     if (!riskAssessment) {
+      const evaluation = RiskAssessor.evaluateRisk(resolvedPatientId, signals);
       const patientSafeResponse: PatientSafeRiskResponse = {
-        risk_level: 'normal',
-        patient_safe_status: 'Journey on track',
-        explanation: 'Your journey is on track with regular check-ins.',
-        recommended_actions: [],
-        evaluated_at: new Date().toISOString()
+        risk_level: evaluation.risk_level,
+        patient_safe_status: RiskAssessor.getPatientSafeStatus(evaluation.risk_level, signals),
+        explanation: evaluation.explanation,
+        recommended_actions: RiskAssessor.getRecommendedActions(evaluation.risk_level, signals),
+        evaluated_at: evaluation.evaluated_at.toISOString(),
       };
 
       return NextResponse.json(patientSafeResponse);
     }
 
     // Generate patient-safe status and recommendations using internal signals
-    const signals = activeSignals?.map(s => ({
-      ...s,
-      patient_id: resolvedPatientId
-    })) || [];
 
     const patientSafeStatus = RiskAssessor.getPatientSafeStatus(riskAssessment.risk_level, signals);
     const recommendedActions = RiskAssessor.getRecommendedActions(riskAssessment.risk_level, signals);

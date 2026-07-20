@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      // If no profile exists, return null (protection not activated)
       if (error.code === 'PGRST116') {
         return NextResponse.json({ 
           data: null,
@@ -51,9 +50,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
-  } catch (error) {
+    // Fetch patient metadata and notes
+    const { data: patientData } = await supabase
+      .from("patients")
+      .select("notes, full_name, email, phone, country, treatment")
+      .eq("id", resolvedPatientId)
+      .single();
+
+    let extraDetails = {};
+    if (patientData?.notes) {
+      try {
+        extraDetails = JSON.parse(patientData.notes);
+      } catch (e) {}
+    }
+
+    return NextResponse.json({
+      data: {
+        ...data,
+        patient: {
+          full_name: patientData?.full_name || "",
+          email: patientData?.email || "",
+          phone: patientData?.phone || "",
+          country: patientData?.country || "",
+          treatment: patientData?.treatment || ""
+        },
+        extra: extraDetails
+      }
+    });
+  } catch (error: any) {
     console.error("Error fetching safety profile:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Internal server error" }, { status: 500 });
   }
 }

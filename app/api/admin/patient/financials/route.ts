@@ -32,7 +32,19 @@ export async function POST(request: NextRequest) {
       assigned_hospital,
       assigned_coordinator_id,
       journey_stage,
-      risk_level
+      risk_level,
+      // Extra details
+      flight_number,
+      flight_departure_time,
+      hotel_name,
+      hotel_address,
+      hotel_booking_reference,
+      doctor_name,
+      treatment_plan_summary,
+      allergies,
+      blood_group,
+      emergency_contacts,
+      medical_history
     } = body;
 
     if (!patient_id) {
@@ -41,13 +53,24 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = createServiceRoleClient();
 
-    // 1. Update basic patient info & financials
+    // 1. Update basic patient info & financials & extra details
     const notesJSON = JSON.stringify({
       notes_text: notes_text || "",
       estimated_cost: Number(estimated_cost) || 0,
       paid_amount: Number(paid_amount) || 0,
       currency: currency || "USD",
-      invoice_status: invoice_status || "UNPAID"
+      invoice_status: invoice_status || "UNPAID",
+      flight_number: flight_number || "",
+      flight_departure_time: flight_departure_time || "",
+      hotel_name: hotel_name || "",
+      hotel_address: hotel_address || "",
+      hotel_booking_reference: hotel_booking_reference || "",
+      doctor_name: doctor_name || "",
+      treatment_plan_summary: treatment_plan_summary || "",
+      allergies: allergies || "",
+      blood_group: blood_group || "",
+      emergency_contacts: emergency_contacts || "",
+      medical_history: medical_history || ""
     });
 
     const updateFields: any = {

@@ -1,103 +1,67 @@
 "use client";
 
+import Link from "next/link";
 import {
-
-ShieldCheck,
-
-Bell,
-
-Users,
-
-User,
-
-Palette,
-
-Lock,
-
-Globe,
-
-Building2,
-
-ChevronRight,
-
-Mail,
-
-Phone,
-
-BadgeCheck,
-
-Search,
-
-Plus,
-
-Trash2,
-
-Pencil,
-
-UserCog,
-
+  ShieldCheck,
+  Bell,
+  Users,
+  User,
+  Palette,
+  Lock,
+  Globe,
+  Building2,
+  ChevronRight,
+  Mail,
+  Phone,
+  BadgeCheck,
+  Search,
+  Plus,
+  Trash2,
+  Pencil,
+  UserCog,
 }from "lucide-react";
 
-
-
 const sections=[
-
-{
-
-title:"Profile",
-
-icon:User,
-
-},
-
-{
-
-title:"Permissions",
-
-icon:ShieldCheck,
-
-},
-
-{
-
-title:"Employees",
-
-icon:Users,
-
-},
-
-{
-
-title:"Website CMS",
-
-icon:Globe,
-
-},
-
-{
-
-title:"Notifications",
-
-icon:Bell,
-
-},
-
-{
-
-title:"Security",
-
-icon:Lock,
-
-},
-
-{
-
-title:"Theme",
-
-icon:Palette,
-
-},
-
+  {
+    title:"Profile",
+    icon:User,
+    href: "#profile"
+  },
+  {
+    title:"Permissions",
+    icon:ShieldCheck,
+    href: "#permissions"
+  },
+  {
+    title:"Employees",
+    icon:Users,
+    href: "#employees"
+  },
+  {
+    title:"Coordinators",
+    icon:UserCog,
+    href: "/admin/settings/coordinators"
+  },
+  {
+    title:"Website CMS",
+    icon:Globe,
+    href: "#website-cms"
+  },
+  {
+    title:"Notifications",
+    icon:Bell,
+    href: "#notifications"
+  },
+  {
+    title:"Security",
+    icon:Lock,
+    href: "#security"
+  },
+  {
+    title:"Theme",
+    icon:Palette,
+    href: "#theme"
+  },
 ];
 
 

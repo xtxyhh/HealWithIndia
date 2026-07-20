@@ -123,9 +123,32 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Protect patient portal
+  if (pathname.startsWith("/patient")) {
+    if (pathname === "/patient/login") {
+      return response;
+    }
+    if (!user) {
+      return NextResponse.redirect(new URL("/patient-login", request.url));
+    }
+  }
+
+  // Protect coordinator portal
+  if (pathname.startsWith("/coordinator")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    const role = user.app_metadata?.role;
+    if (role !== "coordinator" && role !== "admin" && role !== "super_admin") {
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("error", "unauthorized");
+      return redirectWithCookies(loginUrl, response);
+    }
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/safety/:path*"],
+  matcher: ["/admin/:path*", "/safety/:path*", "/patient/:path*", "/coordinator/:path*"],
 };

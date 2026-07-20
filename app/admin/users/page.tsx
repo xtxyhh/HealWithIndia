@@ -81,7 +81,7 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const showSuccessMsg = (msg: string) => {

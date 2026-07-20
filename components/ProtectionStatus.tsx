@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -120,7 +121,9 @@ export default function ProtectionStatus({
             </p>
           </div>
           <p className="text-slate-400 text-sm">
-            {Math.round((checklistProgress.completed / checklistProgress.total) * 100)}% complete
+            {checklistProgress.total > 0
+              ? `${Math.round((checklistProgress.completed / checklistProgress.total) * 100)}% complete`
+              : '0% complete'}
           </p>
         </div>
 
@@ -178,13 +181,13 @@ export default function ProtectionStatus({
             <p className="text-white font-semibold mb-2">{recommendation.title}</p>
             <p className="text-slate-400 text-sm mb-4">{recommendation.description}</p>
             {recommendation.actionText && recommendation.actionHref && (
-              <a
+              <Link
                 href={recommendation.actionHref}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${colors.bg} ${colors.text} ${colors.border} font-semibold text-sm hover:opacity-80 transition-opacity`}
               >
                 {recommendation.actionText}
                 <ArrowRight size={16} />
-              </a>
+              </Link>
             )}
           </div>
         </div>

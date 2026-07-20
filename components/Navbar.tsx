@@ -204,9 +204,9 @@ export default function Navbar() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenuOpen(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setMobileTreatments(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setMobileHospitals(false);
   }, [pathname]);
 

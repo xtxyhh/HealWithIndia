@@ -1,0 +1,23 @@
+
+> healwithindia@0.1.0 build
+> next build
+
+▲ Next.js 16.2.7 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 43s
+  Running TypeScript ...
+Failed to type check.
+
+./app/safety/page.tsx:1165:28
+Type error: Cannot find name 'Link'.
+
+  [90m1163 |[0m                         };
+  [90m1164 |[0m                         [36mreturn[0m (
+[31m[1m>[0m [90m1165 |[0m                           <[33mLink[0m
+  [90m     |[0m                            [31m[1m^[0m
+  [90m1166 |[0m                             key={scCase.id}
+  [90m1167 |[0m                             href={[32m`/safety/case/[0m${scCase.id[32m}`[0m}
+  [90m1168 |[0m                             className=[32m"block bg-slate-900/40 border border-slate-850 rou...[0m
+Next.js build worker exited with code: 1 and signal: null

@@ -12,10 +12,11 @@ import {
   AlertTriangle,
   CheckCircle,
   MessageSquare,
+  Activity,
   Loader2,
 } from "lucide-react";
 
-export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SafetyCaseDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,6 +24,8 @@ export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id:
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [events, setEvents] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [actionNotes, setActionNotes] = useState<string>("");
+  const [resolutionCategory, setResolutionCategory] = useState<string>("patient_satisfied");
   const [caseId, setCaseId] = useState<string | null>(null);
 
   const loadCaseData = async (id: string) => {
@@ -43,10 +46,7 @@ export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id:
 
       const { data } = await response.json();
       setSafetyCase(data);
-      
-      // Load events separately (would need separate API endpoint)
-      // For now, we'll show the case without events
-      setEvents([]);
+      setEvents(data?.safety_case_events || []);
     } catch (err) {
       setError("Failed to load case data");
     } finally {
@@ -64,33 +64,48 @@ export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id:
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  const handleAction = async (status: string) => {
+  const handleResponseAction = async (action: string) => {
     if (!caseId) return;
-    
+
+    if (action === "resolve" && !resolutionCategory) {
+      setError("Select a resolution category before resolving the case.");
+      return;
+    }
+
     try {
       setLoading(true);
-      
-      const response = await fetch(`/api/admin/safety/cases/${caseId}`, {
-        method: "PATCH",
+      setError(null);
+
+      const body: Record<string, unknown> = {
+        action,
+        notes: actionNotes || undefined,
+      };
+
+      if (action === "resolve") {
+        body.resolution_category = resolutionCategory;
+      }
+
+      const response = await fetch(`/api/admin/safety/cases/${caseId}/response`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        setError(errorData.error || "Failed to update case");
+        setError(errorData.error || "Failed to perform response action");
         setLoading(false);
         return;
       }
 
-      // Reload case data
       if (caseId) {
         await loadCaseData(caseId);
       }
     } catch (err) {
-      setError("Failed to update case");
+      console.error(err);
+      setError("Failed to perform response action");
       setLoading(false);
     }
   };
@@ -295,33 +310,72 @@ export default function SafetyCaseDetailPage({ params }: { params: Promise<{ id:
               <h2 className="text-xl font-bold">Actions</h2>
             </div>
 
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="block text-slate-400 text-sm mb-2" htmlFor="actionNotes">
+                  Notes for the response action
+                </label>
+                <textarea
+                  id="actionNotes"
+                  value={actionNotes}
+                  onChange={(event) => setActionNotes(event.target.value)}
+                  placeholder="Record important context or patient follow-up details"
+                  className="w-full min-h-[100px] rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 text-sm mb-2" htmlFor="resolutionCategory">
+                  Resolution category
+                </label>
+                <select
+                  id="resolutionCategory"
+                  value={resolutionCategory}
+                  onChange={(event) => setResolutionCategory(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="patient_satisfied">Patient satisfied</option>
+                  <option value="coordinator_resolved">Coordinator resolved</option>
+                  <option value="external_support_provided">External support provided</option>
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-3">
-              <button 
-                onClick={() => handleAction("acknowledged")}
+              <button
+                onClick={() => handleResponseAction("acknowledge")}
                 disabled={loading}
                 className="w-full py-3 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
                 Acknowledge Case
               </button>
-              <button 
-                onClick={() => handleAction("in_progress")}
+              <button
+                onClick={() => handleResponseAction("claim")}
                 disabled={loading}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <User size={18} />}
-                Assign Coordinator
+                Claim Case
               </button>
-              <button 
-                onClick={() => handleAction("in_progress")}
+              <button
+                onClick={() => handleResponseAction("monitoring")}
                 disabled={loading}
                 className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <MessageSquare size={18} />}
-                Update Status
+                {loading ? <Loader2 size={18} className="animate-spin" /> : <Activity size={18} />}
+                Start Monitoring
               </button>
-              <button 
-                onClick={() => handleAction("resolved")}
+              <button
+                onClick={() => handleResponseAction("escalate")}
+                disabled={loading}
+                className="w-full py-3 bg-orange-600 hover:bg-orange-700 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : <AlertTriangle size={18} />}
+                Escalate Priority
+              </button>
+              <button
+                onClick={() => handleResponseAction("resolve")}
                 disabled={loading}
                 className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
               >

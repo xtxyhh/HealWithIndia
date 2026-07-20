@@ -124,6 +124,17 @@ let paidAmount = patient?.estimated_revenue || 0;
 let currency = "USD";
 let invoiceStatus = "UNPAID";
 let notesText = patient?.description || "";
+let flightNumber = "";
+let flightDepartureTime = "";
+let hotelName = "";
+let hotelAddress = "";
+let hotelBookingReference = "";
+let doctorName = "";
+let treatmentPlanSummary = "";
+let allergies = "";
+let bloodGroup = "";
+let emergencyContacts = "";
+let medicalHistory = "";
 
 try {
   const finData = JSON.parse(patient?.notes || "{}");
@@ -134,6 +145,17 @@ try {
     invoiceStatus = finData.invoice_status || "UNPAID";
     notesText = finData.notes_text || patient?.description || "";
   }
+  flightNumber = finData.flight_number || "";
+  flightDepartureTime = finData.flight_departure_time || "";
+  hotelName = finData.hotel_name || "";
+  hotelAddress = finData.hotel_address || "";
+  hotelBookingReference = finData.hotel_booking_reference || "";
+  doctorName = finData.doctor_name || "";
+  treatmentPlanSummary = finData.treatment_plan_summary || "";
+  allergies = finData.allergies || "";
+  bloodGroup = finData.blood_group || "";
+  emergencyContacts = finData.emergency_contacts || "";
+  medicalHistory = finData.medical_history || "";
 } catch (e) {}
 
 const remainingAmount = estimatedCost - paidAmount;
@@ -1605,7 +1627,24 @@ patient.notes
   patientEmail={patient.email}
   portalAccess={portalAccess}
   protectionStatus={protectionStatus}
-  financials={{ estimatedCost, paidAmount, currency, invoiceStatus, notesText }}
+  financials={{
+    estimatedCost,
+    paidAmount,
+    currency,
+    invoiceStatus,
+    notesText,
+    flightNumber,
+    flightDepartureTime,
+    hotelName,
+    hotelAddress,
+    hotelBookingReference,
+    doctorName,
+    treatmentPlanSummary,
+    allergies,
+    bloodGroup,
+    emergencyContacts,
+    medicalHistory,
+  }}
   hospitals={hospitals || []}
   coordinators={coordinators || []}
   assignedCoordinatorId={coordinatorAssignment?.coordinator_id || "none"}

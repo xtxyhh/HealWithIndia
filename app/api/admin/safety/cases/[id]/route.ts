@@ -50,6 +50,13 @@ export async function GET(
           id,
           full_name,
           country
+        ),
+        safety_case_events (
+          id,
+          event_type,
+          description,
+          created_by,
+          created_at
         )
       `)
       .eq("id", id)

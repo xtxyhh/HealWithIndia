@@ -74,17 +74,28 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      // Check if portal is already active (password setup complete)
-      const { data: mapping } = await supabase
+      // Check if this recovery session belongs to a valid invite mapping
+      const { data: mapping, error: mappingError } = await supabase
         .from("patient_auth_mapping")
         .select("portal_access_status")
         .eq("auth_user_id", activeSession.user.id)
         .maybeSingle();
 
-      if (mapping?.portal_access_status === "ACTIVE") {
-        // Sign out and send directly to login
+      if (mappingError || !mapping) {
+        await supabase.auth.signOut();
+        router.replace("/patient-login?error=auth_callback_failed");
+        return;
+      }
+
+      if (mapping.portal_access_status === "ACTIVE") {
         await supabase.auth.signOut();
         router.replace("/patient-login");
+        return;
+      }
+
+      if (mapping.portal_access_status !== "INVITE_PENDING") {
+        await supabase.auth.signOut();
+        router.replace("/patient-login?error=auth_callback_failed");
         return;
       }
 

@@ -1,0 +1,29 @@
+
+> healwithindia@0.1.0 build
+> next build
+
+▲ Next.js 16.2.7 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 34.6s
+  Running TypeScript ...
+Failed to type check.
+
+.next/dev/types/validator.ts:648:31
+Type error: Type 'typeof import("C:/Projects/HealWithIndia/app/api/admin/safety/cases/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/safety/cases/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ data: { id: any; category: any; priority: any; status: any; description: any; ... 5 more ...; safety_case_events: { ...; }[]; }; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+
+  [90m646 |[0m   [36mtype[0m __IsExpected<[33mSpecific[0m [36mextends[0m [33mRouteHandlerConfig[0m<[32m"/api/admin/safety/cases/[id]"[0m>> ..[33m.[0m
+  [90m647 |[0m   [36mconst[0m handler = {} [36mas[0m [36mtypeof[0m [36mimport[0m([32m"../../../app/api/admin/safety/cases/[id]/route.js"[0m)
+[31m[1m>[0m [90m648 |[0m   [36mtype[0m __Check = __IsExpected<[36mtypeof[0m handler>
+  [90m    |[0m                               [31m[1m^[0m
+  [90m649 |[0m   [90m// @ts-ignore[0m
+  [90m650 |[0m   [36mtype[0m __Unused = __Check
+  [90m651 |[0m }
+Next.js build worker exited with code: 1 and signal: null

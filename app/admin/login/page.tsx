@@ -20,7 +20,7 @@ function AdminLoginContent() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setError("You do not have permission to access the Admin Portal. This login is for HealWithIndia administrators only.");
     } else if (errorParam === 'forbidden') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setError("Access Denied: Your staff account does not have permission to access this section of the Admin Portal.");
     }
   }, [searchParams]);
